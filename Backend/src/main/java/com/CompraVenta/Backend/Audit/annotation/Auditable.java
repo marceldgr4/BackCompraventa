@@ -1,4 +1,11 @@
 package com.CompraVenta.Backend.Audit.annotation;
 
-public class Auditable {
+import java.lang.annotation.*;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Auditable {
+    String operation();
+    String entity() default "";
 }
