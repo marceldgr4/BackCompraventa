@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Configuration
-public class JackSonConfig {
+public class JacksonConfig {
     public static final String DATE_FORMAT = "dd/MM/yyyy";
     public static final String DATETIME_FORMAT = "dd/MM/yyyy HH:mm:ss";
 
