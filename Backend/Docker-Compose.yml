@@ -1,142 +1,126 @@
-version: '3.9'
+# ════════════════════════════════════════════════════════════════════════════
+# CompraVenta — Docker Compose
+# PostgreSQL y pgAdmin son REMOTOS (Supabase/Cloud) — no se definen aquí
+# Este compose levanta: Backend API + Redis + (opcional) Nginx
+# ════════════════════════════════════════════════════════════════════════════
+version: "3.9"
 
-# ── CompraVenta — Stack completo local ─────────────────────────────────────
-# Uso: docker-compose up -d
-# Detener: docker-compose down
-# Limpiar volúmenes: docker-compose down -v
+# ── Redes ─────────────────────────────────────────────────────────────────────
+networks:
+  compraventa-net:
+    driver: bridge
+    name: compraventa-net
 
+# ── Volúmenes ─────────────────────────────────────────────────────────────────
+volumes:
+  redis-data:
+    name: compraventa-redis-data
+  app-logs:
+    name: compraventa-logs
+
+# ── Servicios ─────────────────────────────────────────────────────────────────
 services:
 
-  # ── PostgreSQL Local ──────────────────────────────────────────────────────
-  postgres-local:
-    image: postgres:16-alpine
-    container_name: compraventa_db
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: compraventa
-      POSTGRES_USER: ${DB_USER:-compraventa}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-compraventa_dev}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "127.0.0.1:5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-compraventa} -d compraventa"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-
-  # ── Redis ──────────────────────────────────────────────────────────────────
+  # ── Redis Cache ─────────────────────────────────────────────────────────────
   redis:
-    image: redis:7-alpine
-    container_name: compraventa_redis
+    image: redis:7.2-alpine
+    container_name: compraventa-redis
     restart: unless-stopped
     command: >
       redis-server
-      --requirepass ${REDIS_PASSWORD:-redis_dev}
+      --requirepass ${REDIS_PASSWORD}
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
-    volumes:
-      - redis_data:/data
+      --appendonly yes
+      --appendfilename redis-aof.aof
     ports:
-      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:6379:6379"      # Solo accesible localmente, no expuesto externamente
+    volumes:
+      - redis-data:/data
+    networks:
+      - compraventa-net
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_dev}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 10s
 
-  # ── Spring Boot Backend ────────────────────────────────────────────────────
+  # ── Backend Spring Boot ──────────────────────────────────────────────────────
   backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: compraventa_api
+      target: runtime
+    image: compraventa-backend:latest
+    container_name: compraventa-backend
     restart: unless-stopped
     depends_on:
-      postgres-local:
-        condition: service_healthy
       redis:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: production
-      LOCAL_DB_URL: jdbc:postgresql://postgres-local:5432/compraventa
-      LOCAL_DB_USER: ${DB_USER:-compraventa}
-      LOCAL_DB_PASSWORD: ${DB_PASSWORD:-compraventa_dev}
-      REDIS_HOST: redis
+      # Perfil de Spring
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+
+      # Base de datos PostgreSQL LOCAL (el driver se conecta directamente, sin Docker)
+      LOCAL_DB_URL: ${LOCAL_DB_URL}
+      LOCAL_DB_USER: ${LOCAL_DB_USER}
+      LOCAL_DB_PASSWORD: ${LOCAL_DB_PASSWORD}
+
+      # Redis
+      REDIS_HOST: redis          # Nombre del servicio Docker
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_dev}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # JWT
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-604800000}
+
+      # Supabase Sync
       SUPABASE_URL: ${SUPABASE_URL}
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       SYNC_SIGNING_SECRET: ${SYNC_SIGNING_SECRET}
+      SYNC_ENABLED: ${SYNC_ENABLED:-true}
+
+      # CORS
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+
+      # JVM tuning
+      JAVA_OPTS: >-
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -Djava.security.egd=file:/dev/./urandom
     ports:
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
     volumes:
-      - ./logs:/app/logs
+      - app-logs:/app/logs
+    networks:
+      - compraventa-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/actuator/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider",
+             "http://localhost:8080/api/actuator/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
       start_period: 60s
+      retries: 3
 
-  # ── Next.js Web App ────────────────────────────────────────────────────────
-  webapp:
-    build:
-      context: ../webapp
-      dockerfile: Dockerfile
-    container_name: compraventa_web
-    restart: unless-stopped
-    depends_on:
-      - backend
-    environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
-    ports:
-      - "127.0.0.1:3000:3000"
-
-  # ── Nginx Reverse Proxy ────────────────────────────────────────────────────
+  # ── Nginx Reverse Proxy (opcional, para producción) ──────────────────────────
   nginx:
-    image: nginx:alpine
-    container_name: compraventa_nginx
+    image: nginx:1.25-alpine
+    container_name: compraventa-nginx
     restart: unless-stopped
+    profiles:
+      - production          # Solo activo con: docker compose --profile production up
     depends_on:
-      - backend
-      - webapp
+      backend:
+        condition: service_healthy
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/certs:/etc/nginx/certs:ro
-      - nginx_cache:/var/cache/nginx
-
-  # ── Backup automático diario ───────────────────────────────────────────────
-  backup:
-    image: postgres:16-alpine
-    container_name: compraventa_backup
-    restart: unless-stopped
-    depends_on:
-      - postgres-local
-    environment:
-      PGPASSWORD: ${DB_PASSWORD:-compraventa_dev}
-    volumes:
-      - ./backups:/backups
-    command: >
-      sh -c "while true; do
-        pg_dump -h postgres-local -U ${DB_USER:-compraventa} compraventa
-          | gzip > /backups/backup_$$(date +%Y%m%d_%H%M%S).sql.gz;
-        find /backups -name '*.sql.gz' -mtime +30 -delete;
-        echo 'Backup completado: '$$(date);
-        sleep 86400;
-      done"
-
-volumes:
-  postgres_data:
-    driver: local
-  redis_data:
-    driver: local
-  nginx_cache:
-    driver: local
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - compraventa-net

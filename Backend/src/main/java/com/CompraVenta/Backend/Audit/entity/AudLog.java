@@ -20,8 +20,8 @@ public class AudLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "emplooyee_id")
-    private String emplooyeeId;
+    @Column(name = "employee_id")
+    private String employeeId;
 
     @Column(name="operation", nullable = false, length = 100)
     private String operation;

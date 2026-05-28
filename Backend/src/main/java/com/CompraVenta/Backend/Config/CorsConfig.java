@@ -17,7 +17,7 @@ public class CorsConfig {
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
 
-    @Value("${cors.allowed-methods")
+    @Value("${cors.allowed-methods}")
     private String allowedMethods;
 
     @Value("${cors.allowed-headers}")

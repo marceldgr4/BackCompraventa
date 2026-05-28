@@ -1,4 +1,4 @@
-package com.CompraVenta.Backend.Exception.hardler;
+package com.CompraVenta.Backend.Exception.handler;
 
 import com.CompraVenta.Backend.Exception.custom.BusinessException;
 import com.CompraVenta.Backend.Exception.custom.ResourceNotFoundException;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
-public class GlobalEceptionHandler {
+public class GlobalExceptionHandler {
 
             @ExceptionHandler(ResourceNotFoundException.class)
         public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex) {
@@ -67,7 +67,7 @@ public class GlobalEceptionHandler {
                     .body(ApiResponse.<Map<String, String>>builder()
                             .success(false)
                             .data(errors)
-                            .error(ApiResponse.ErrorDetail.of("Error de validación.", "VALIDATION_ERROR"))
+                            .error(ErrorDetail.of("Error de validación.", "VALIDATION_ERROR"))
                             .build());
         }
 

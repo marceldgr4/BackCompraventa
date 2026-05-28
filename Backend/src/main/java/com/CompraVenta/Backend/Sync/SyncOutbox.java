@@ -34,9 +34,9 @@ public class SyncOutbox {
     @Column(name = "operation",nullable = false, length = 10)
     private String operation;
 
-    @Column(name = "paypload",nullable = false,columnDefinition = "jsonb")
+    @Column(name = "payload",nullable = false,columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
-    private String paypload;
+    private String payload;
 
     @Column(name = "local_version",nullable = false)
     @Builder.Default

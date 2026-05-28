@@ -28,10 +28,10 @@ public class JwtService {
     @Value("${jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
 
-    public String generateAccesoToken(UserDetails userDetails) {
+    public String generateAccessToken(UserDetails userDetails) {
         return buildToken(Map.of(), userDetails, expirationMs);
     }
-    public String  generateAccessoToken(Map<String,Object> extraClaims, UserDetails userDetails) {
+    public String  generateAccessToken(Map<String,Object> extraClaims, UserDetails userDetails) {
         return buildToken(extraClaims,userDetails,expirationMs);
     }
     public String generateRefreshToken(UserDetails userDetails) {
