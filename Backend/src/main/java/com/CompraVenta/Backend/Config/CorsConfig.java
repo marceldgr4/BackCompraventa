@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Configuration
+@SuppressWarnings("null")
 public class CorsConfig {
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;

@@ -22,6 +22,7 @@ import java.util.Map;
 
 @Configuration
 @EnableCaching
+@SuppressWarnings("null")
 public class RedisConfig {
 
     @Bean
