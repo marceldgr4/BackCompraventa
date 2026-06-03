@@ -1,6 +1,5 @@
 package com.CompraVenta.Backend.Security.service;
 
-import com.CompraVenta.Backend.Modules.Employee.Dto.Response.EmployeeResponse;
 import com.CompraVenta.Backend.Modules.Employee.Entity.Employee;
 import com.CompraVenta.Backend.Modules.Employee.Repository.EmployeeRepository;
 import com.CompraVenta.Backend.Security.model.CustomUserDetails;

@@ -3,7 +3,6 @@ package com.CompraVenta.Backend.Modules.Employee.Service.Impl;
 import com.CompraVenta.Backend.Audit.annotation.Auditable;
 import com.CompraVenta.Backend.Exception.custom.BusinessException;
 import com.CompraVenta.Backend.Exception.custom.ResourceNotFoundException;
-import com.CompraVenta.Backend.Exception.custom.UnauthorizedException;
 import com.CompraVenta.Backend.Modules.Employee.Dto.Request.CreateEmployeeRequest;
 import com.CompraVenta.Backend.Modules.Employee.Dto.Request.UpdateEmployee;
 import com.CompraVenta.Backend.Modules.Employee.Dto.Request.UpdateProfile;
@@ -27,6 +26,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("null")
 public class EmployeeServiceImpl implements EmployeeService {
     private  final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;

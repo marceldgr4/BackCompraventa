@@ -4,7 +4,6 @@ import com.CompraVenta.Backend.Modules.Employee.Dto.Request.CreateEmployeeReques
 import com.CompraVenta.Backend.Modules.Employee.Dto.Request.UpdateEmployee;
 import com.CompraVenta.Backend.Modules.Employee.Dto.Request.UpdateProfile;
 import com.CompraVenta.Backend.Modules.Employee.Dto.Response.EmployeeResponse;
-import com.CompraVenta.Backend.Modules.Employee.Repository.EmployeeRepository;
 import com.CompraVenta.Backend.Modules.Employee.Service.EmployeeService;
 import com.CompraVenta.Backend.Shared.Dto.ApiResponse;
 import com.CompraVenta.Backend.Shared.Dto.PageResponse;

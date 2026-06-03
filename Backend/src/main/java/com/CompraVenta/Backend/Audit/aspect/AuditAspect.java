@@ -23,6 +23,7 @@ import java.time.Instant;
 @Aspect
 @Component
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class AuditAspect {
     private final ObjectMapper objectMapper;
     private final AuditRepository auditRepository;
