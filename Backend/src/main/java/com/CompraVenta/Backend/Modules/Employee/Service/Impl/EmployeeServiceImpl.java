@@ -57,7 +57,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeMapper.toEntity(request);
         employee.setPasswordHash(passwordEncoder.encode(request.password()));
         Employee saved = employeeRepository.save(employee);
-        log.info("Employee {} has been created",saved.getId(),saved.getEmail(),saved.getRole());
+
+        log.info("Empleado creado con ID={}, emial={}, rol={}",saved.getId(),saved.getEmail(),saved.getRole());
         return employeeMapper.toEmployeeResponse(saved);
     }
 
