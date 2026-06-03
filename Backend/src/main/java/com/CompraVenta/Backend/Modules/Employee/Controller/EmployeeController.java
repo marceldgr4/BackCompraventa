@@ -29,12 +29,12 @@ import java.net.URI;
 import java.util.UUID;
 
 @RestController
-@RequestMapping
+@RequestMapping("/employees")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "Employees", description = "Gestion de empleados-solo admin")
 public class EmployeeController {
-    private final EmployeeRepository employeeRepository;
+
     private final EmployeeService employeeService;
 
     @GetMapping
@@ -42,7 +42,7 @@ public class EmployeeController {
     @Operation(summary = "Lista empleados con paginacion y filtros (admin")
     public ResponseEntity<ApiResponse<PageResponse<EmployeeResponse>>> findAll(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) boolean active,
+            @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) Role rol,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") @Max(100) int size,
