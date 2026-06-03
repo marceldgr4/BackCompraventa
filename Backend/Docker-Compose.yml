@@ -1,7 +1,6 @@
 # ════════════════════════════════════════════════════════════════════════════
-# CompraVenta — Docker Compose
-# PostgreSQL y pgAdmin son REMOTOS (Supabase/Cloud) — no se definen aquí
-# Este compose levanta: Backend API + Redis + (opcional) Nginx
+# CompraVenta — Docker Compose Integrado
+# Backend API + Redis + PostgreSQL + pgAdmin Web + (opcional) Nginx
 # ════════════════════════════════════════════════════════════════════════════
 version: "3.9"
 
@@ -17,9 +16,49 @@ volumes:
     name: compraventa-redis-data
   app-logs:
     name: compraventa-logs
+  postgres-data:
+    name: compraventa-postgres-data
 
 # ── Servicios ─────────────────────────────────────────────────────────────────
 services:
+
+  # ── PostgreSQL Server ───────────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: compraventa-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${LOCAL_DB_USER}
+      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD}
+      POSTGRES_DB: compraventa
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - compraventa-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${LOCAL_DB_USER} -d compraventa" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── pgAdmin Web Client (Para gestionar la BD desde el navegador) ──────────────
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: compraventa-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@compraventa.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+    ports:
+      - "8081:80" # Acceso web en http://localhost:8081
+    networks:
+      - compraventa-net
+    depends_on:
+      - db
 
   # ── Redis Cache ─────────────────────────────────────────────────────────────
   redis:
@@ -34,7 +73,7 @@ services:
       --appendonly yes
       --appendfilename redis-aof.aof
     ports:
-      - "127.0.0.1:6379:6379"      # Solo accesible localmente, no expuesto externamente
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis-data:/data
     networks:
@@ -58,17 +97,18 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      db:
+        condition: service_healthy
     environment:
-      # Perfil de Spring
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
 
-      # Base de datos PostgreSQL LOCAL (el driver se conecta directamente, sin Docker)
-      LOCAL_DB_URL: ${LOCAL_DB_URL}
-      LOCAL_DB_USER: ${LOCAL_DB_USER}
-      LOCAL_DB_PASSWORD: ${LOCAL_DB_PASSWORD}
+      # Conexión al Postgres de Docker (se usa el nombre del servicio 'db')
+      LOCAL_DB_URL: jdbc:postgresql://db:5432/compraventa
+      LOCAL_DB_USER: ${LOCAL_DB_USER:-usuario_admin}
+      LOCAL_DB_PASSWORD: ${LOCAL_DB_PASSWORD:-clave_secreta_db}
 
       # Redis
-      REDIS_HOST: redis          # Nombre del servicio Docker
+      REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
 
@@ -112,7 +152,7 @@ services:
     container_name: compraventa-nginx
     restart: unless-stopped
     profiles:
-      - production          # Solo activo con: docker compose --profile production up
+      - production
     depends_on:
       backend:
         condition: service_healthy

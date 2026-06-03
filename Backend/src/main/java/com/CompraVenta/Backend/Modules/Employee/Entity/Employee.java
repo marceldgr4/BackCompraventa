@@ -58,7 +58,7 @@ public class Employee {
     private LocalDateTime updatedAt;
 
 
-    public static boolean isAdmin() {
+    public boolean isAdmin() {
         return Role.ADMIN.equals(this.role);
     }
 
