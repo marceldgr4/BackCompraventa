@@ -60,6 +60,12 @@ public class JwtService {
     public  boolean isTokenExpired(String token){
         return extractExpiration(token).before(new Date());
     }
+
+    public long getRemainingExpirationMs(String token) {
+        Date expiration = extractExpiration(token);
+        long remaining = expiration.getTime() - System.currentTimeMillis();
+        return Math.max(remaining, 0L);
+    }
     public String extractUsername(String token){
         return extractClaim(token, Claims::getSubject);
     }

@@ -5,6 +5,6 @@ public class ResourceNotFoundException extends RuntimeException {
         super(message);
     }
     public ResourceNotFoundException(String resource, Object  id) {
-        super(String.format("Recursis '%s' no enctrado con id: %s",resource,id));
+        super(String.format("Recurso '%s' no encontrado con id: %s",resource,id));
     }
 }
