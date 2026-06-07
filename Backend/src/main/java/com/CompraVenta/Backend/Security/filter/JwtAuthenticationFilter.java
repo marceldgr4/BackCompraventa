@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.lang.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -27,9 +28,12 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String AUTHORIZATION_HEADER = "Authorization";
+    private  static final String BLACKLIST_PREFIX = "auth:blacklist:";
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final RedisTemplate<String,Object> redisTemplate;
+
 
     @Override
     protected void doFilterInternal(
@@ -44,6 +48,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         String token = authHeader.substring(BEARER_PREFIX.length());
         try{
+            if(isTokenRevoked(token)){
+                log.debug("Token en blacklist rechado para {}",request.getRequestURI());
+                filterChain.doFilter(request,response);
+                return;
+            }
             String username = jwtService.extractUsername(token);
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -58,5 +67,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.warn("No se pudo authentica con el token JWT : {}",e.getMessage());
         }
         filterChain.doFilter(request, response);
+    }
+    private boolean isTokenRevoked(String token){
+        try{
+            return Boolean.TRUE.equals(redisTemplate.hasKey(BEARER_PREFIX+token));
+        }catch (Exception e){
+            log.warn("redis no disponible para verificar blackList:{}",e.getMessage());
+            return false;
+        }
     }
 }
