@@ -15,5 +15,4 @@ public record EmployeeResponse(
         LocalDateTime updatedAt
 
 
-) {
-}
+) {}

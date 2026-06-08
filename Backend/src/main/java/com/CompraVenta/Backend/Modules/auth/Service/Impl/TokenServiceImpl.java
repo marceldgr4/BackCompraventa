@@ -121,7 +121,7 @@ public class TokenServiceImpl implements TokenService {
     }
     private Map<String,Object> buildExtraClaims(Employee employee){
         return Map.of(
-                "role", employee.getRole().name(),
+                "role", employee.getRol().name(),
                 "employeeId", employee.getId().toString()
         );
     }
@@ -129,7 +129,7 @@ public class TokenServiceImpl implements TokenService {
         return new CustomUserDetails(
                 employee.getEmail(),
                 employee.getPasswordHash(),
-                employee.getRole().name(),
+                employee.getRol().name(),
                 employee.isActive()
         );
     }
@@ -141,7 +141,7 @@ public class TokenServiceImpl implements TokenService {
                         employee.getId(),
                         employee.getEmail(),
                         employee.getFullName(),
-                        employee.getRole()
+                        employee.getRol()
                 ),
                 "online"
         );

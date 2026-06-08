@@ -11,6 +11,7 @@ import com.CompraVenta.Backend.Modules.Employee.Entity.Employee;
 import com.CompraVenta.Backend.Modules.Employee.Mapper.EmployeeMapper;
 import com.CompraVenta.Backend.Modules.Employee.Repository.EmployeeRepository;
 import com.CompraVenta.Backend.Modules.Employee.Service.EmployeeService;
+import com.CompraVenta.Backend.Security.context.SecurityContext;
 import com.CompraVenta.Backend.Shared.Dto.PageResponse;
 import com.CompraVenta.Backend.Shared.enums.Role;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +27,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@SuppressWarnings("null")
+
 public class EmployeeServiceImpl implements EmployeeService {
+
     private  final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
     private final PasswordEncoder passwordEncoder;
@@ -58,7 +60,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setPasswordHash(passwordEncoder.encode(request.password()));
         Employee saved = employeeRepository.save(employee);
 
-        log.info("Empleado creado con ID={}, emial={}, rol={}",saved.getId(),saved.getEmail(),saved.getRole());
+        log.info("Empleado creado con ID={}, emial={}, rol={}",saved.getId(),saved.getEmail(),saved.getRol());
         return employeeMapper.toEmployeeResponse(saved);
     }
 
@@ -82,8 +84,11 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeResponse setActive(UUID id, Boolean active) {
         Employee employee = getEmployeeOrThrow(id);
 
-        if(!active && employee.isAdmin()){
-            throw new BusinessException("El administrador no puede desactivar su propia cuenta.");
+        if(!active) {
+            String currentEmail = SecurityContext.getCurrentUsername();
+            if (employee.getEmail().equalsIgnoreCase(currentEmail)) {
+                throw new BusinessException("El administrador no puede desactivar su propia cuenta.");
+            }
         }
         employee.setActive(active);
         String action = active ? "ACTIVO" : "DESACTIVADO";

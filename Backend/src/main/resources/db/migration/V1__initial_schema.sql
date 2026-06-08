@@ -25,7 +25,7 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-CREATE TYPE cliente_status    AS ENUM ('Activo', 'Eliminado');
+CREATE TYPE cliente_status    AS ENUM ('ACTIVO', 'INACTIVO');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -53,20 +53,20 @@ CREATE INDEX IF NOT EXISTS idx_employees_active ON public.employees (active);
 -- ── clientes ──────────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS public.clientes (
-                                               id                BIGSERIAL         PRIMARY KEY,
-                                               global_id         UUID              NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-    cedula            TEXT              UNIQUE,
-    first_name        TEXT              NOT NULL,
-    last_name         TEXT,
-    email             TEXT,
-    phone             TEXT,
-    address           TEXT,
-    city              TEXT,
-    status            cliente_status    NOT NULL DEFAULT 'Activo',
-    registration_type registration_type NOT NULL DEFAULT 'COMPLETO',
-    created_at        TIMESTAMPTZ       NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMPTZ       NOT NULL DEFAULT NOW()
-    );
+id                BIGSERIAL         PRIMARY KEY,
+global_id         UUID              NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+cedula            TEXT              UNIQUE,
+first_name        TEXT              NOT NULL,
+last_name         TEXT,
+email             TEXT,
+phone             TEXT,
+address           TEXT,
+city              TEXT,
+status            cliente_status    NOT NULL DEFAULT 'Activo',
+registration_type registration_type NOT NULL DEFAULT 'COMPLETO',
+created_at        TIMESTAMPTZ       NOT NULL DEFAULT NOW(),
+updated_at        TIMESTAMPTZ       NOT NULL DEFAULT NOW()
+);
 
 CREATE INDEX IF NOT EXISTS idx_clientes_global_id ON public.clientes (global_id);
 CREATE INDEX IF NOT EXISTS idx_clientes_cedula    ON public.clientes (cedula) WHERE cedula IS NOT NULL;
