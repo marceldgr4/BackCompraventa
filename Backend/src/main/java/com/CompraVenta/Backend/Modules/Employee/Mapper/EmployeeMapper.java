@@ -14,7 +14,7 @@ public class EmployeeMapper {
                 employee.getId(),
                 employee.getEmail(),
                 employee.getFullName(),
-                employee.getRole(),
+                employee.getRol(),
                 employee.isActive(),
                 employee.getCreatedAt(),
                 employee.getUpdatedAt()
@@ -25,7 +25,7 @@ public class EmployeeMapper {
                 .email(request.email().trim().toLowerCase())
                 .fullName(request.fullName().trim())
                 .passwordHash("")
-                .role(request.rol())
+                .rol(request.rol())
                 .active(true)
                 .build();
     }
@@ -34,7 +34,7 @@ public class EmployeeMapper {
             employee.setFullName(request.fullName().trim());
         }
         if (request.rol() !=null){
-            employee.setRole(request.rol());
+            employee.setRol(request.rol());
         }
     }
 }

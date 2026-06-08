@@ -14,9 +14,10 @@ import java.util.UUID;
 
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
+
     Optional<Employee> findByEmailIgnoreCase(String email);
+
     boolean existsByEmailIgnoreCase(String email);
-    Page<Employee> findByActive(boolean active, Pageable pageable);
 
     @Query("""
             SELECT e FROM Employee e

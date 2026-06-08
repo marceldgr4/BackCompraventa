@@ -62,7 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String accessToken = jwtService.generateAccessToken(buildExtrateClaims(employee), userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
         tokenService.storeRefreshToken(email, refreshToken);
-        log.info("Login exitoso: email{},rol{}", email, employee.getRole());
+        log.info("Login exitoso: email{},rol{}", email, employee.getRol());
         return buildAuthResponse(accessToken, refreshToken, employee);
     }
     private void authenticationCredentials(String email, String password, Employee employee) {
@@ -81,12 +81,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return new CustomUserDetails(
                 employee.getEmail(),
                 employee.getPasswordHash(),
-                employee.getRole().name(),
+                employee.getRol().name(),
                 employee.isActive()
         );
     }
     private java.util.Map<String, Object> buildExtrateClaims(Employee employee) {
-        return java.util.Map.of("role", employee.getRole().name());
+        return java.util.Map.of("role", employee.getRol().name());
     }
     private AuthResponse buildAuthResponse(String accessToken, String refreshToken, Employee employee) {
         return new AuthResponse(
@@ -96,7 +96,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         employee.getId(),
                         employee.getEmail(),
                         employee.getFullName(),
-                        employee.getRole()
+                        employee.getRol()
                 ),
                 "online"
         );

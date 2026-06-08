@@ -43,7 +43,7 @@ public class Employee {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", nullable = false,length = 20)
-    private Role role;
+    private Role rol;
 
     @Column(name = "active",nullable = false)
     @Builder.Default
@@ -59,11 +59,11 @@ public class Employee {
 
 
     public boolean isAdmin() {
-        return Role.ADMIN.equals(this.role);
+        return Role.ADMIN.equals(this.rol);
     }
 
     public boolean canAuthenticate() {
-        return Boolean.TRUE.equals(this.active);
+        return this.active;
     }
 
     @Override

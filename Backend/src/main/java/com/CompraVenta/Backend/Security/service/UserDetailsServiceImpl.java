@@ -26,11 +26,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     log.warn("Authentication attempt for unknow email: {}", email);
                     return new UsernameNotFoundException("Authentication employees attempt for unknow email: " + email);
                 });
-        log.debug("Loading user: email={}, rol ={}, active ={}", employee.getEmail(), employee.getRole(), employee.isActive());
+        log.debug("Loading user: email={}, rol ={}, active ={}", employee.getEmail(), employee.getRol(), employee.isActive());
         return new CustomUserDetails(
                 employee.getEmail(),
                 employee.getPasswordHash(),
-                employee.getRole().name(),
+                employee.getRol().name(),
                 Boolean.TRUE.equals(employee.isActive())
         );
     }

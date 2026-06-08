@@ -14,19 +14,18 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-
-
-
 @RestController
-@RequestMapping
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 @Tag(name ="Auth",description = "Autenticacion y gestion de usuario")
 
 public class AuthController {
+    private static final String BEARER_PREFIX = "Bearer ";
     private final AuthService authService;
     private final EmployeeService employeeService;
 
@@ -57,11 +56,12 @@ public class AuthController {
     @PostMapping("/logout")
     @Operation(summary = "cerrar session en invalidad token")
     public ResponseEntity<ApiResponse<Void>> logout(
-            @RequestHeader("Authoorization") String authoorization) {
-        String token = extractBearerToken(authoorizationHeader);
+            @RequestHeader("Authorization") String authorizationHeader) {
+        String token = extractBearerToken(authorizationHeader);
         authService.logout(token);
         return ResponseEntity.ok(ApiResponse.ok(null, "Sesion cerrada correctamente."));
     }
+
     @PostMapping("/register")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "resgistro de nuenvo empleado(solo admin)")
@@ -69,14 +69,16 @@ public class AuthController {
             @RequestBody
             @Valid
             CreateEmployeeRequest request){
-        return ResponseEntity.status(201).body(ApiResponse.ok(
-                employeeService.create(request),
+        return ResponseEntity.
+                status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(
+                        employeeService.create(request),
                 "empleado registrado correctamente."
         ));
     }
-    private String extractBearerToken(String headers){
-        if(header !=null && header.startsWith("Bearer")){
-            return header.substring(7);
+    private String extractBearerToken(String authorizationHeader) {
+        if(authorizationHeader !=null && authorizationHeader.startsWith(BEARER_PREFIX)){
+            return authorizationHeader.substring(BEARER_PREFIX.length());
         }
         return "";
     }
