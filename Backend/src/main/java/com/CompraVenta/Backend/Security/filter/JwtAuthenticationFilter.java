@@ -70,7 +70,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
     private boolean isTokenRevoked(String token){
         try{
-            return Boolean.TRUE.equals(redisTemplate.hasKey(BEARER_PREFIX+token));
+            return Boolean.TRUE.equals(redisTemplate.hasKey(BLACKLIST_PREFIX + token));
         }catch (Exception e){
             log.warn("redis no disponible para verificar blackList:{}",e.getMessage());
             return false;

@@ -18,11 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-
-
-
 @RestController
-@RequestMapping
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 @Tag(name ="Auth",description = "Autenticacion y gestion de usuario")
 
@@ -57,8 +54,8 @@ public class AuthController {
     @PostMapping("/logout")
     @Operation(summary = "cerrar session en invalidad token")
     public ResponseEntity<ApiResponse<Void>> logout(
-            @RequestHeader("Authoorization") String authoorization) {
-        String token = extractBearerToken(authoorizationHeader);
+            @RequestHeader("Authoorization") String authorizationHeader) {
+        String token = extractBearerToken(authorizationHeader);
         authService.logout(token);
         return ResponseEntity.ok(ApiResponse.ok(null, "Sesion cerrada correctamente."));
     }
@@ -74,7 +71,7 @@ public class AuthController {
                 "empleado registrado correctamente."
         ));
     }
-    private String extractBearerToken(String headers){
+    private String extractBearerToken(String header){
         if(header !=null && header.startsWith("Bearer")){
             return header.substring(7);
         }
