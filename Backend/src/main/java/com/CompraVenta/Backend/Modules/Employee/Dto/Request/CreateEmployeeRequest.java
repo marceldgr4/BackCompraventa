@@ -6,8 +6,8 @@ import jakarta.validation.constraints.*;
 
 public record CreateEmployeeRequest(
         @NotBlank(message = "El email es obligatorio")
-        @Email(message = "El formto del email no es valido")
-        @Size(max = 255, message = "El eamil no puede superar 255 caractres")
+        @Email(message = "El formato del email no es válido")
+        @Size(max = 255, message = "El email no puede superar 255 caracteres")
         String email,
 
          @NotBlank(message = "El nombre completo es obligatorio")

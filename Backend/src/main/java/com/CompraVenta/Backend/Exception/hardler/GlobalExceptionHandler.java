@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -77,5 +79,18 @@ public class GlobalExceptionHandler {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Error interno del servidor.", "INTERNAL_ERROR"));
         }
+
+        @ExceptionHandler(LockedException.class)
+        public ResponseEntity<ApiResponse<Void>> handleLocked(LockedException ex) {
+                return ResponseEntity.status(HttpStatus.LOCKED)
+                        .body((ApiResponse.error(ex.getMessage(), "ACCOUNT_LOCKED")));
+        }
+
+        @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDisabled(DisabledException ex) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.error("cuenta desactivada. contantar el admin", "ACCOUNT_DISABLED"));
+        }
+
     }
 

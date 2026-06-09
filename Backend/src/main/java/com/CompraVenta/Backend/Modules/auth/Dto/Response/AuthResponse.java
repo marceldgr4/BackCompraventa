@@ -1,6 +1,5 @@
 package com.CompraVenta.Backend.Modules.auth.Dto.Response;
 
-import com.CompraVenta.Backend.Modules.Employee.Entity.Employee;
 import com.CompraVenta.Backend.Shared.enums.Role;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
