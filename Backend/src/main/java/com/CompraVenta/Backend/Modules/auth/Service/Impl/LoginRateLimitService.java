@@ -17,6 +17,7 @@ public class LoginRateLimitService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public void checkLoginAttempts(String email) {
+        try{
         String key = LOGIN_ATTEMPTS_PREFIX + email;
         Object attempts = redisTemplate.opsForValue().get(key);
 
@@ -24,6 +25,11 @@ public class LoginRateLimitService {
             Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
             throw new BusinessException(String.format(
                     "Cuenta bloqueada temporalmente por exceso de intentos. Intente en %d segundos.", ttl));
+        }
+    }catch (BusinessException e){
+            throw e;
+        }catch (Exception e){
+        log.warn("Redis no disponible para rate limitado, omitiendi verificacion: {}", e.getMessage());
         }
     }
 

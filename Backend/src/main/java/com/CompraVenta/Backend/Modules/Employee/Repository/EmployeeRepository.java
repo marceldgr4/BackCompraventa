@@ -25,7 +25,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
             LOWER(e.fullName) LIKE LOWER(CONCAT('%',:search, '%')) OR 
             LOWER(e.email) LIKE LOWER(CONCAT('%', :search,'%')))
             AND (:active IS NULL OR e.active = :active)
-            AND (:rol IS NULL OR e.role =:rol)
+            AND (:rol IS NULL OR e.rol =:rol)
 """)
     Page<Employee> findByFilters(
             @Param("search") String search,

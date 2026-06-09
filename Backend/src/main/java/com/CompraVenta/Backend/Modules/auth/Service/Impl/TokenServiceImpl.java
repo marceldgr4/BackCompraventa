@@ -1,6 +1,5 @@
 package com.CompraVenta.Backend.Modules.auth.Service.Impl;
 
-import com.CompraVenta.Backend.Exception.custom.BusinessException;
 import com.CompraVenta.Backend.Exception.custom.ResourceNotFoundException;
 import com.CompraVenta.Backend.Exception.custom.UnauthorizedException;
 import com.CompraVenta.Backend.Modules.Employee.Entity.Employee;
