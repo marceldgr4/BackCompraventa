@@ -7,8 +7,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LoginRateLimitService {
     private static final String LOGIN_ATTEMPTS_PREFIX = "auth:attempts:";
     private static final int MAX_LOGIN_ATTEMPTS = 5;
@@ -34,15 +37,23 @@ public class LoginRateLimitService {
     }
 
     public void incrementAttempts(String email) {
-        String key = LOGIN_ATTEMPTS_PREFIX + email;
-        Long current = redisTemplate.opsForValue().increment(key);
+        try {
+            String key = LOGIN_ATTEMPTS_PREFIX + email;
+            Long current = redisTemplate.opsForValue().increment(key);
 
-        if (current != null && current == 1L) {
-            redisTemplate.expire(key, LOCKOUT_MINUTES, TimeUnit.MINUTES);
+            if (current != null && current == 1L) {
+                redisTemplate.expire(key, LOCKOUT_MINUTES, TimeUnit.MINUTES);
+            }
+        } catch (Exception e) {
+            log.warn("Redis no disponible, omitiendo incremento de intentos: {}", e.getMessage());
         }
     }
 
     public void resetAttempts(String email) {
-        redisTemplate.delete(LOGIN_ATTEMPTS_PREFIX + email);
+        try {
+            redisTemplate.delete(LOGIN_ATTEMPTS_PREFIX + email);
+        } catch (Exception e) {
+            log.warn("Redis no disponible, omitiendo reset de intentos: {}", e.getMessage());
+        }
     }
 }

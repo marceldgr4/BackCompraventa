@@ -98,13 +98,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional
-    @Auditable(operation = "DELECT_EMPLOYEE", entity = "employees")
+    @Auditable(operation = "DELETE_EMPLOYEE", entity = "employees")
     public void delete(UUID id) {
         if(!employeeRepository.existsById(id)){
             throw new ResourceNotFoundException("Employee not found",id);
         }
         employeeRepository.deleteById(id);
-        log.info("Employee  delect: id = {}",id);
+        log.info("Employee deleted: id = {}",id);
     }
 
     @Override

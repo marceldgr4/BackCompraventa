@@ -1,7 +1,7 @@
 package com.CompraVenta.Backend.Modules.Clients.Entity;
 
-import com.CompraVenta.Backend.Modules.Clients.Emus.ClienteStatus;
-import com.CompraVenta.Backend.Modules.Clients.Emus.RegistrationType;
+import com.CompraVenta.Backend.Modules.Clients.Enums.ClienteStatus;
+import com.CompraVenta.Backend.Modules.Clients.Enums.RegistrationType;
 import com.CompraVenta.Backend.Shared.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -38,10 +38,10 @@ public class Cliente extends BaseEntity {
     @Column(name = "email",length = 255)
     private String email;
 
-    @Column(name = "phone",length = 255)
+    @Column(name = "phone",length = 20)
     private String phone;
 
-    @Column(name = "addres", length = 255)
+    @Column(name = "address", length = 255)
     private String address;
 
     @Column(name = "city", length = 255)
@@ -53,7 +53,7 @@ public class Cliente extends BaseEntity {
     private ClienteStatus status = ClienteStatus.ACTIVO;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "register_type", nullable = false, length =20 )
+    @Column(name = "registration_type", nullable = false, length =20 )
     @Builder.Default
     private RegistrationType registrationType = RegistrationType.COMPLETO;
 
@@ -65,7 +65,7 @@ public class Cliente extends BaseEntity {
     }
     public void promoteComplete(){
         if(RegistrationType.RAPIDO.equals(this.registrationType)
-         && this.lastName != null && this.lastName.isBlank()){
+         && this.lastName != null && !this.lastName.isBlank()){
             this.registrationType = RegistrationType.COMPLETO;
         }
     }

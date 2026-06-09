@@ -1,4 +1,4 @@
-package com.CompraVenta.Backend.Exception.hardler;
+package com.CompraVenta.Backend.Exception.handler;
 
 import com.CompraVenta.Backend.Exception.custom.BusinessException;
 import com.CompraVenta.Backend.Exception.custom.ResourceNotFoundException;
