@@ -3,7 +3,7 @@ package com.CompraVenta.Backend.Modules.Clients.Service;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Request.CreateClienteRequest;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Request.UpdateClienteRequest;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Response.ClienteResponse;
-import com.CompraVenta.Backend.Modules.Clients.Emus.ClienteStatus;
+import com.CompraVenta.Backend.Modules.Clients.Enums.ClienteStatus;
 import com.CompraVenta.Backend.Shared.Dto.PageResponse;
 import org.springframework.data.domain.Pageable;
 

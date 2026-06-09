@@ -5,12 +5,13 @@ import com.CompraVenta.Backend.Exception.custom.ResourceNotFoundException;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Request.CreateClienteRequest;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Request.UpdateClienteRequest;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Response.ClienteResponse;
-import com.CompraVenta.Backend.Modules.Clients.Emus.ClienteStatus;
+import com.CompraVenta.Backend.Modules.Clients.Enums.ClienteStatus;
 import com.CompraVenta.Backend.Modules.Clients.Entity.Cliente;
 import com.CompraVenta.Backend.Modules.Clients.Mapper.ClienteMapper;
 import com.CompraVenta.Backend.Modules.Clients.Repository.ClienteRepository;
 import com.CompraVenta.Backend.Modules.Clients.Service.ClienteService;
 import com.CompraVenta.Backend.Shared.Dto.PageResponse;
+import com.CompraVenta.Backend.Audit.annotation.Auditable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +42,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional(readOnly = true)
     public ClienteResponse findByGlobalId(UUID globalId){
-        return clienteRepository.findByGloblaId(globalId)
+        return clienteRepository.findByGlobalId(globalId)
                 .map(clienteMapper::toClienteResponse)
                 .orElseThrow(()-> new ResourceNotFoundException("Cliente",globalId));
     }
@@ -56,14 +57,15 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
+    @Auditable(operation = "CREATE_CLIENTE", entity = "clientes")
     public ClienteResponse create(CreateClienteRequest request) {
         if(request.cedula() !=null && !request.cedula().isBlank() && clienteRepository.existsByCedula(request.cedula())){
             throw new BusinessException(
                     "Ya existe un cliente con numero de cedula " + request.cedula()
             );
         }
-        Cliente cliente = ClienteMapper.toEntity(request);
+        Cliente cliente = clienteMapper.toEntity(request);
         Cliente saved = clienteRepository.save(cliente);
         log.info("Cliente creado id={}, globalId={}, tipo={}", saved.getId(),
                 saved.getGlobalId(), saved.getRegistrationType());
@@ -72,10 +74,11 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     @Transactional
+    @Auditable(operation = "UPDATE_CLIENTE", entity = "clientes")
     public ClienteResponse update(UUID globalId, UpdateClienteRequest request) {
         Cliente cliente = findEntityOrThrow(globalId);
                 if(request.cedula() !=null && !request.cedula().isBlank()
-                && clienteRepository.exitsByCedulaAndIdNot(request.cedula(), cliente.getId())){
+                && clienteRepository.existsByCedulaAndIdNot(request.cedula(), cliente.getId())){
                     throw new BusinessException(
                             "Ya existe un Cliente Con la cedular"+ request.cedula());
                 }
@@ -86,12 +89,13 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     private Cliente findEntityOrThrow(UUID globalId) {
-        return clienteRepository.findByGloblaId(globalId)
+        return clienteRepository.findByGlobalId(globalId)
                 .orElseThrow(()-> new ResourceNotFoundException("Cliente",globalId));
     }
 
     @Override
     @Transactional
+    @Auditable(operation = "DELETE_CLIENTE", entity = "clientes")
     public void delete(UUID globalId) {
         Cliente cliente = findEntityOrThrow(globalId);
         cliente.setStatus(ClienteStatus.INACTIVO);

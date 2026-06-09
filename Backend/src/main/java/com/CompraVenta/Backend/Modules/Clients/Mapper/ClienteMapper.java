@@ -3,14 +3,14 @@ package com.CompraVenta.Backend.Modules.Clients.Mapper;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Request.CreateClienteRequest;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Request.UpdateClienteRequest;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Response.ClienteResponse;
-import com.CompraVenta.Backend.Modules.Clients.Emus.RegistrationType;
+import com.CompraVenta.Backend.Modules.Clients.Enums.RegistrationType;
 import com.CompraVenta.Backend.Modules.Clients.Entity.Cliente;
 
 import org.springframework.stereotype.Component;
 
 @Component
 public class ClienteMapper {
-    public static Cliente toEntity(CreateClienteRequest request) {
+    public Cliente toEntity(CreateClienteRequest request) {
         RegistrationType type = hasLastName(request.lastName())
                 ? RegistrationType.COMPLETO : RegistrationType.RAPIDO;
         return Cliente.builder()
@@ -25,7 +25,7 @@ public class ClienteMapper {
                 .build();
     }
 
-    private static boolean hasLastName(String lastName) {
+    private boolean hasLastName(String lastName) {
         return lastName != null && !lastName.isBlank();
     }
 

@@ -3,7 +3,7 @@ package com.CompraVenta.Backend.Modules.Clients.Controller;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Request.CreateClienteRequest;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Request.UpdateClienteRequest;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Response.ClienteResponse;
-import com.CompraVenta.Backend.Modules.Clients.Emus.ClienteStatus;
+import com.CompraVenta.Backend.Modules.Clients.Enums.ClienteStatus;
 import com.CompraVenta.Backend.Modules.Clients.Service.ClienteService;
 import com.CompraVenta.Backend.Shared.Dto.ApiResponse;
 import com.CompraVenta.Backend.Shared.Dto.PageResponse;
@@ -26,7 +26,7 @@ import java.net.URI;
 import java.util.UUID;
 
 @RestController
-@RequestMapping
+@RequestMapping("/clientes")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "Clientes", description = "gestion de clientes del negocio")
@@ -45,7 +45,7 @@ public class ClienteController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
         return ResponseEntity.ok(ApiResponse.ok(clienteService.findAll(status, pageable)));
     }
-    @GetMapping("/{globalId")
+    @GetMapping("/{globalId}")
     @Operation(summary = "obtener cliente por UUID public")
     public ResponseEntity<ApiResponse<ClienteResponse>> findByGlobalId(
             @PathVariable UUID globalId
@@ -75,7 +75,7 @@ public class ClienteController {
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{globalId}")
-                .buildAndExpand(created.GlobalId())
+                .buildAndExpand(created.globalId())
                 .toUri();
         return ResponseEntity.created(location).body(ApiResponse.ok(created));
 

@@ -1,6 +1,6 @@
 package com.CompraVenta.Backend.Modules.Clients.Repository;
 
-import com.CompraVenta.Backend.Modules.Clients.Emus.ClienteStatus;
+import com.CompraVenta.Backend.Modules.Clients.Enums.ClienteStatus;
 import com.CompraVenta.Backend.Modules.Clients.Entity.Cliente;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,20 +17,20 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     Optional<Cliente> findByCedula(String cedula);
 
     boolean existsByCedula(String cedula);
-    boolean exitsByCedulaAndIdNot(String cedula, long id);
-    boolean existsByPhoneNumber(String phoneNumber);
+    boolean existsByCedulaAndIdNot(String cedula, long id);
+    boolean existsByPhone(String phone);
     boolean existsByEmail(String email);
 
-    Optional<Cliente> findByGloblaId(UUID globlaId);
+    Optional<Cliente> findByGlobalId(UUID globalId);
     Page<Cliente> findAllByStatus(ClienteStatus status, Pageable pageable);
 
     @Query("""
             SELECT c FROM Cliente c
             WHERE(
-                    LOWER(c.firstName) LIKE LOWER(CONCAT('%', term, '%'))
-                    OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', term, '%'))
-                    OR LOWER(c.cedula) LIKE LOWER(CONCAT('%', term, '%'))
-                    OR LOWER(c.email) LIKE LOWER(CONCAT('%', term, '%'))
+                    LOWER(c.firstName) LIKE LOWER(CONCAT('%', :term, '%'))
+                    OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :term, '%'))
+                    OR LOWER(c.cedula) LIKE LOWER(CONCAT('%', :term, '%'))
+                    OR LOWER(c.email) LIKE LOWER(CONCAT('%', :term, '%'))
             ) AND(:status IS NULL OR c.status = :status)
         """)
     Page<Cliente> searchByTerm(

@@ -10,10 +10,10 @@ public record CreateClienteRequest(
         String cedula,
 
         @NotBlank(message = "el nombre es obligatorio")
-        @Size(max= 20, message = "el nombre no puede supera 20 caractres")
+        @Size(max= 100, message = "el nombre no puede supera 100 caractres")
         String firstName,
 
-        @Size(max = 20, message = "el apellido no puede suerpar 20 caractres")
+        @Size(max = 100, message = "el apellido no puede suerpar 100 caractres")
         String lastName,
 
         @Email(message = "el correo no tiene formato valido")

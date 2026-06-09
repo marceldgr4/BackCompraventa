@@ -1,4 +1,4 @@
-package com.CompraVenta.Backend.Modules.Clients.Emus;
+package com.CompraVenta.Backend.Modules.Clients.Enums;
 
 public enum RegistrationType {
     COMPLETO,

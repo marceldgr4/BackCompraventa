@@ -8,10 +8,10 @@ public record UpdateClienteRequest(
         @Size(max = 10)
         String cedula,
 
-        @Size(max = 20)
+        @Size(max = 100)
         String firstName,
 
-        @Size(max = 20)
+        @Size(max = 100)
         String lastName,
 
         @Email(message = "El correo electrónico no tiene un formato válido")

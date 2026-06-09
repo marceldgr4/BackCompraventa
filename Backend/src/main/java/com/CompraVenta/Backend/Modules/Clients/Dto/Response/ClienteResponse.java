@@ -1,14 +1,14 @@
 package com.CompraVenta.Backend.Modules.Clients.Dto.Response;
 
-import com.CompraVenta.Backend.Modules.Clients.Emus.ClienteStatus;
-import com.CompraVenta.Backend.Modules.Clients.Emus.RegistrationType;
+import com.CompraVenta.Backend.Modules.Clients.Enums.ClienteStatus;
+import com.CompraVenta.Backend.Modules.Clients.Enums.RegistrationType;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record ClienteResponse(
         Long id,
-        UUID GlobalId,
+        UUID globalId,
         String cedula,
         String firstName,
         String lastName,
@@ -18,8 +18,8 @@ public record ClienteResponse(
         String city,
         ClienteStatus status,
         RegistrationType registrationType,
-        LocalDateTime createAt,
-        LocalDateTime updateAt
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 
 ) {
 }
