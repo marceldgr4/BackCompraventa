@@ -14,15 +14,20 @@ import java.util.UUID;
 
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
+    Optional<Cliente> findByGlobalId(UUID globalId);
     Optional<Cliente> findByCedula(String cedula);
     Optional<Cliente> findByPhone(String phone);
 
-    boolean existsByCedula(String cedula);
-    boolean existsByCedulaAndIdNot(String cedula, long id);
-    boolean existsByPhone(String phone);
-    boolean existsByEmail(String email);
+    boolean existsByCedulaAndStatusNot(String cedula, ClienteStatus status);
 
-    Optional<Cliente> findByGlobalId(UUID globalId);
+    boolean existsByPhoneAndStatusNot(String phone, ClienteStatus status);
+
+    // ── Checks de unicidad para update (excluye el propio registro)
+    boolean existsByCedulaAndIdNotAndStatusNot(String cedula, Long id, ClienteStatus status);
+
+    boolean existsByPhoneAndIdNotAndStatusNot(String phone, Long id, ClienteStatus status);
+
+
     Page<Cliente> findAllByStatus(ClienteStatus status, Pageable pageable);
 
     @Query("""

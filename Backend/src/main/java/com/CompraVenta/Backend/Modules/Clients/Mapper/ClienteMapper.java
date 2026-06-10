@@ -12,7 +12,9 @@ import org.springframework.stereotype.Component;
 public class ClienteMapper {
     public Cliente toEntity(CreateClienteRequest request) {
         RegistrationType type = hasLastName(request.lastName())
-                ? RegistrationType.COMPLETO : RegistrationType.RAPIDO;
+                ? RegistrationType.COMPLETO
+                : RegistrationType.RAPIDO;
+
         return Cliente.builder()
                 .cedula(request.cedula())
                 .firstName(request.firstName().trim())
@@ -55,7 +57,7 @@ public class ClienteMapper {
         if (request.phone() != null) cliente.setPhone(request.phone());
         if (request.address() != null) cliente.setAddress(request.address());
         if (request.city() != null) cliente.setCity(request.city());
-        cliente.promoteComplete();
+        cliente.promoteToComplete();
 
     }
 }

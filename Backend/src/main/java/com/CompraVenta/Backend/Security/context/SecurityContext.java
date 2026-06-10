@@ -25,4 +25,13 @@ public class SecurityContext {
                 && !"anonymousUser".equals(auth.getPrincipal());
     }
 
+    public boolean hasRole(String role) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) return false;
+        
+        String expectedRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+        return auth.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(expectedRole));
+    }
+
 }
