@@ -93,7 +93,6 @@ public class ClienteController {
 
     //DELETE
     @DeleteMapping("/{globalId}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "eliminacion logica del cliente o cambiar el estado ")
     public ResponseEntity<Void> delete(
             @PathVariable UUID globalId

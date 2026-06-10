@@ -37,6 +37,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
                     OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :term, '%'))
                     OR LOWER(c.cedula) LIKE LOWER(CONCAT('%', :term, '%'))
                     OR LOWER(c.email) LIKE LOWER(CONCAT('%', :term, '%'))
+                    OR LOWER(c.phone) LIKE LOWER(CONCAT('%', :term, '%'))
             ) AND(:status IS NULL OR c.status = :status)
         """)
     Page<Cliente> searchByTerm(
