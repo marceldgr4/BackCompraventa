@@ -12,8 +12,10 @@ import lombok.*;
         name = "clientes",
         schema= "public",
         indexes = {
-                @Index(name = "idx_clientes_cedula", columnList = "cedula"),
-                @Index(name = "idx_cliente_status", columnList = "status")
+                @Index(name = "idx_clientes_global_id",  columnList = "global_id", unique = true),
+                @Index(name = "idx_clientes_cedula",     columnList = "cedula"),
+                @Index(name = "idx_clientes_phone",      columnList = "phone"),
+                @Index(name = "idx_clientes_status",     columnList = "status")
 
         }
 
@@ -61,7 +63,7 @@ public class Cliente extends BaseEntity {
     public boolean isCompleteRegistration() {
         return RegistrationType.COMPLETO.equals(this.registrationType);
     }
-    public void promoteComplete(){
+    public void promoteToComplete(){
         if(RegistrationType.RAPIDO.equals(this.registrationType)
          && this.lastName != null && !this.lastName.isBlank()){
             this.registrationType = RegistrationType.COMPLETO;
