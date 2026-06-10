@@ -18,7 +18,7 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-    CREATE TYPE article_category AS ENUM ('Electrodomesticos', 'Joyeria', 'Herramientas', 'Tecnologia', 'Otro');
+    CREATE TYPE article_category AS ENUM ('ELECTRODOMESTICOS', 'TECNOLOGIA', 'OTROS');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -28,12 +28,12 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-    CREATE TYPE item_state       AS ENUM ('Excelente', 'Bueno', 'Regular', 'Malo');
+    CREATE TYPE item_state       AS ENUM ('EXCELENTE', 'BUENO', 'REGULAR', 'MALO');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-    CREATE TYPE pawn_status      AS ENUM ('Activo', 'Vencido', 'Finalizado', 'Retirado', 'Perdido', 'Vendido');
+    CREATE TYPE pawn_status      AS ENUM ('ACTIVO', 'VENCIDO', 'FINALIZADO', 'RETIRADO', 'PERDIDO', 'Vendido');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
