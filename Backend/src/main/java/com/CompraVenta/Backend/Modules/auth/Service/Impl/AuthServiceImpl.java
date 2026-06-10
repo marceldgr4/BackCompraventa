@@ -93,7 +93,10 @@ public class AuthServiceImpl implements AuthService {
         );
     }
     private java.util.Map<String, Object> buildExtrateClaims(Employee employee) {
-        return java.util.Map.of("role", employee.getRol().name());
+        return java.util.Map.of(
+                "role", employee.getRol().name(),
+                "employeeId", employee.getGlobalId().toString()
+        );
     }
     private AuthResponse buildAuthResponse(String accessToken, String refreshToken, Employee employee) {
         return new AuthResponse(
@@ -105,7 +108,7 @@ public class AuthServiceImpl implements AuthService {
                         employee.getFullName(),
                         employee.getRol()
                 ),
-                "online"
+                "local"
         );
     }
 
