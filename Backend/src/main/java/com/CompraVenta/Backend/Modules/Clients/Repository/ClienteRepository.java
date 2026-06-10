@@ -15,6 +15,7 @@ import java.util.UUID;
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     Optional<Cliente> findByCedula(String cedula);
+    Optional<Cliente> findByPhone(String phone);
 
     boolean existsByCedula(String cedula);
     boolean existsByCedulaAndIdNot(String cedula, long id);

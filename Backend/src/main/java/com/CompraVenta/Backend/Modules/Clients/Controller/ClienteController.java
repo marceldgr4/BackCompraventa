@@ -58,7 +58,7 @@ public class ClienteController {
             @RequestParam String term,
             @RequestParam(required = false) ClienteStatus status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") @Max(20) int size
+            @RequestParam(defaultValue = "20") @Max(100) int size
     ){
                 Pageable pageable= PageRequest.of(page,size);
                 return ResponseEntity.ok(ApiResponse.ok(clienteService.search(term,status, pageable)));
@@ -99,6 +99,17 @@ public class ClienteController {
             @PathVariable UUID globalId
     ){
         clienteService.delete(globalId);
+        return ResponseEntity.noContent().build();
+    }
+
+    //HARD DELETE
+    @DeleteMapping("/{globalId}/hard")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "eliminacion fisica del cliente")
+    public ResponseEntity<Void> hardDelete(
+            @PathVariable UUID globalId
+    ){
+        clienteService.hardDelete(globalId);
         return ResponseEntity.noContent().build();
     }
 

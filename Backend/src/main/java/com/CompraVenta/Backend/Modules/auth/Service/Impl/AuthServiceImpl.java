@@ -9,15 +9,12 @@ import com.CompraVenta.Backend.Modules.Employee.Repository.EmployeeRepository;
 import com.CompraVenta.Backend.Modules.auth.Dto.Request.LoginRequest;
 import com.CompraVenta.Backend.Modules.auth.Dto.Response.AuthResponse;
 
-import com.CompraVenta.Backend.Modules.auth.Service.AuthenticationService;
-
+import com.CompraVenta.Backend.Modules.auth.Dto.Request.RefreshRequest;
+import com.CompraVenta.Backend.Modules.auth.Service.AuthService;
 import com.CompraVenta.Backend.Security.model.CustomUserDetails;
 import com.CompraVenta.Backend.Security.service.JwtService;
-
 import lombok.RequiredArgsConstructor;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,12 +23,10 @@ import com.CompraVenta.Backend.Modules.auth.Service.TokenService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AuthenticationServiceImpl implements AuthenticationService {
+public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -42,21 +37,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     //--login
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         String email = request.email().trim().toLowerCase();
         rateLimitService.checkLoginAttempts(email);
 
+        // First, verify credentials via AuthenticationManager
+        authenticationCredentials(email, request.password());
+
+        // Then, fetch employee data
         Employee employee = employeeRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> {
-                    rateLimitService.incrementAttempts(email);
-                    return new UnauthorizedException("Credenciales incorrectes");
-                });
+                .orElseThrow(() -> new UnauthorizedException("Credenciales incorrectes"));
+
         if (!employee.canAuthenticate()) {
             throw new BusinessException("La cuenta esta desactivada. contactar el administrador.");
-
         }
-        authenticationCredentials(email, request.password(), employee);
+
         rateLimitService.resetAttempts(email);
         CustomUserDetails userDetails = buildUserDetails(employee);
         String accessToken = jwtService.generateAccessToken(buildExtrateClaims(employee), userDetails);
@@ -65,7 +61,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         log.info("Login exitoso: email{},rol{}", email, employee.getRol());
         return buildAuthResponse(accessToken, refreshToken, employee);
     }
-    private void authenticationCredentials(String email, String password, Employee employee) {
+
+    @Override
+    public AuthResponse refresh(RefreshRequest request) {
+        return tokenService.refresh(request);
+    }
+
+    @Override
+    public void logout(String accessToken) {
+        tokenService.logout(accessToken);
+    }
+
+    private void authenticationCredentials(String email, String password) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
 
@@ -93,7 +100,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 accessToken,
                 refreshToken,
                 new AuthResponse.EmployeeInfo(
-                        employee.getId(),
+                        employee.getGlobalId(),
                         employee.getEmail(),
                         employee.getFullName(),
                         employee.getRol()
@@ -101,6 +108,5 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 "online"
         );
     }
-
 
 }

@@ -13,7 +13,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
+public interface EmployeeRepository extends JpaRepository<Employee, Long> {
+
+    Optional<Employee> findByGlobalId(UUID globalId);
+
+    boolean existsByGlobalId(UUID globalId);
+
+    void deleteByGlobalId(UUID globalId);
 
     Optional<Employee> findByEmailIgnoreCase(String email);
 

@@ -11,7 +11,7 @@ public class EmployeeMapper {
 
     public EmployeeResponse toEmployeeResponse(Employee employee){
         return new EmployeeResponse(
-                employee.getId(),
+                employee.getGlobalId(),
                 employee.getEmail(),
                 employee.getFullName(),
                 employee.getRol(),
@@ -21,13 +21,13 @@ public class EmployeeMapper {
         );
     }
     public Employee toEntity(CreateEmployeeRequest request){
-        return Employee.builder()
-                .email(request.email().trim().toLowerCase())
-                .fullName(request.fullName().trim())
-                .passwordHash("")
-                .rol(request.rol())
-                .active(true)
-                .build();
+        Employee employee = new Employee();
+        employee.setEmail(request.email().trim().toLowerCase());
+        employee.setFullName(request.fullName().trim());
+        employee.setPasswordHash("");
+        employee.setRol(request.rol());
+        employee.setActive(true);
+        return employee;
     }
     public void applyUpdates(Employee employee, UpdateEmployee request) {
         if(request.fullName() !=null){

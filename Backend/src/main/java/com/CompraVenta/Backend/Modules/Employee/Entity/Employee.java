@@ -1,5 +1,6 @@
 package com.CompraVenta.Backend.Modules.Employee.Entity;
 
+import com.CompraVenta.Backend.Shared.entity.BaseEntity;
 import com.CompraVenta.Backend.Shared.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,11 +27,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 
-public class Employee {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
+public class Employee extends BaseEntity {
 
     @Column(name = "email",nullable = false,unique = true,length = 255)
     private String email;
@@ -48,14 +45,6 @@ public class Employee {
     @Column(name = "active",nullable = false)
     @Builder.Default
     private boolean active = true;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false,updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 
 
     public boolean isAdmin() {

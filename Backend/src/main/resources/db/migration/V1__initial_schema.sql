@@ -25,7 +25,7 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-CREATE TYPE cliente_status    AS ENUM ('ACTIVO', 'INACTIVO');
+CREATE TYPE cliente_status    AS ENUM ('ACTIVO', 'INACTIVO', 'ELIMINADO');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

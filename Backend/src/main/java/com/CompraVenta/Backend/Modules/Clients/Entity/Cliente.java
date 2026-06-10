@@ -5,15 +5,13 @@ import com.CompraVenta.Backend.Modules.Clients.Enums.RegistrationType;
 import com.CompraVenta.Backend.Shared.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.boot.actuate.health.Status;
+
 
 @Entity
 @Table(
         name = "clientes",
         schema= "public",
         indexes = {
-                @Index(name = "idx_clientes_global_id", columnList = "global_id",
-                unique = true),
                 @Index(name = "idx_clientes_cedula", columnList = "cedula"),
                 @Index(name = "idx_cliente_status", columnList = "status")
 

@@ -19,5 +19,6 @@ public interface ClienteService {
     ClienteResponse create(CreateClienteRequest request);
     ClienteResponse update(UUID globalId, UpdateClienteRequest request);
     void delete(UUID globalId);
+    void hardDelete(UUID globalId);
 
 }
