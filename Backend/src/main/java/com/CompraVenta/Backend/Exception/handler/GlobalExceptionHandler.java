@@ -44,6 +44,17 @@ public class GlobalExceptionHandler {
                     .body(ApiResponse.error(ex.getMessage(), "FORBIDDEN"));
         }
 
+        @ExceptionHandler(com.CompraVenta.Backend.Exception.custom.DuplicateResourceException.class)
+        public ResponseEntity<ApiResponse<java.util.Map<String, String>>> handleDuplicateResource(com.CompraVenta.Backend.Exception.custom.DuplicateResourceException ex) {
+            log.warn("Recurso duplicado detectado: {} con ID existente: {}", ex.getMessage(), ex.getExistingGlobalId());
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(ApiResponse.<java.util.Map<String, String>>builder()
+                            .success(false)
+                            .data(java.util.Map.of("existingGlobalId", ex.getExistingGlobalId()))
+                            .error(com.CompraVenta.Backend.Shared.Dto.ErrorDetail.of(ex.getMessage(), "DUPLICATE_RESOURCE"))
+                            .build());
+        }
+
         @ExceptionHandler(BadCredentialsException.class)
         public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

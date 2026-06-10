@@ -45,7 +45,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional(readOnly = true)
     public EmployeeResponse findById(UUID id){
-        return employeeRepository.findById(id)
+        return employeeRepository.findByGlobalId(id)
                 .map(employeeMapper::toEmployeeResponse)
                 .orElseThrow(()-> new ResourceNotFoundException("Employee not found",id));
     }
@@ -60,7 +60,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setPasswordHash(passwordEncoder.encode(request.password()));
         Employee saved = employeeRepository.save(employee);
 
-        log.info("Empleado creado con ID={}, emial={}, rol={}",saved.getId(),saved.getEmail(),saved.getRol());
+        log.info("Empleado creado con ID={}, emial={}, rol={}",saved.getGlobalId(),saved.getEmail(),saved.getRol());
         return employeeMapper.toEmployeeResponse(saved);
     }
 
@@ -100,10 +100,10 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     @Auditable(operation = "DELETE_EMPLOYEE", entity = "employees")
     public void delete(UUID id) {
-        if(!employeeRepository.existsById(id)){
+        if(!employeeRepository.existsByGlobalId(id)){
             throw new ResourceNotFoundException("Employee not found",id);
         }
-        employeeRepository.deleteById(id);
+        employeeRepository.deleteByGlobalId(id);
         log.info("Employee deleted: id = {}",id);
     }
 
@@ -128,7 +128,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
     private Employee getEmployeeOrThrow(UUID id){
-        return employeeRepository.findById(id)
+        return employeeRepository.findByGlobalId(id)
                 .orElseThrow(()-> new ResourceNotFoundException("Employee not found",id));
     }
 }

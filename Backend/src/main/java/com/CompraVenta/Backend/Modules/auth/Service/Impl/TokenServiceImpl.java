@@ -137,7 +137,7 @@ public class TokenServiceImpl implements TokenService {
                 accessToken,
                 refreshToken,
                 new AuthResponse.EmployeeInfo(
-                        employee.getId(),
+                        employee.getGlobalId(),
                         employee.getEmail(),
                         employee.getFullName(),
                         employee.getRol()

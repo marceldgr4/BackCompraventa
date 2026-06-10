@@ -46,11 +46,13 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(auth -> {
+                    for (String endpoint : PUBLIC_ENDPOINTS) {
+                        auth.requestMatchers(new org.springframework.security.web.util.matcher.AntPathRequestMatcher(endpoint)).permitAll();
+                    }
+                    auth.requestMatchers(new org.springframework.security.web.util.matcher.AntPathRequestMatcher("/**", HttpMethod.OPTIONS.name())).permitAll()
+                        .anyRequest().authenticated();
+                })
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

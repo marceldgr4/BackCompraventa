@@ -10,7 +10,7 @@ public record AuthResponse(
         String accessToken,
         String refreshToken,
         EmployeeInfo employee,
-        String modo
+        String mode
 ) {
     public record EmployeeInfo(
             UUID id,

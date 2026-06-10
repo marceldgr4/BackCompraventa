@@ -1,6 +1,7 @@
 package com.CompraVenta.Backend.Modules.Clients.Service.Impl;
 
 import com.CompraVenta.Backend.Exception.custom.BusinessException;
+import com.CompraVenta.Backend.Exception.custom.DuplicateResourceException;
 import com.CompraVenta.Backend.Exception.custom.ResourceNotFoundException;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Request.CreateClienteRequest;
 import com.CompraVenta.Backend.Modules.Clients.Dto.Request.UpdateClienteRequest;
@@ -12,6 +13,11 @@ import com.CompraVenta.Backend.Modules.Clients.Repository.ClienteRepository;
 import com.CompraVenta.Backend.Modules.Clients.Service.ClienteService;
 import com.CompraVenta.Backend.Shared.Dto.PageResponse;
 import com.CompraVenta.Backend.Audit.annotation.Auditable;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -28,9 +34,20 @@ public class ClienteServiceImpl implements ClienteService {
     private final ClienteRepository clienteRepository;
     private final ClienteMapper clienteMapper;
 
+    private boolean isEmployee() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_EMPLEADO"));
+    }
+
     @Override
     @Transactional(readOnly = true)
     public PageResponse<ClienteResponse> findAll(ClienteStatus status, Pageable pageable){
+        if (isEmployee()) {
+            status = ClienteStatus.ACTIVO;
+        }
         return PageResponse.from(
                 (status !=null
                 ? clienteRepository.findAllByStatus(status,pageable)
@@ -50,6 +67,9 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<ClienteResponse> search(String term, ClienteStatus status, Pageable pageable){
+        if (isEmployee()) {
+            status = ClienteStatus.ACTIVO;
+        }
         return PageResponse.from(
                 clienteRepository.searchByTerm(term,status,pageable)
                 .map(clienteMapper::toClienteResponse)
@@ -60,10 +80,15 @@ public class ClienteServiceImpl implements ClienteService {
     @Transactional
     @Auditable(operation = "CREATE_CLIENTE", entity = "clientes")
     public ClienteResponse create(CreateClienteRequest request) {
-        if(request.cedula() !=null && !request.cedula().isBlank() && clienteRepository.existsByCedula(request.cedula())){
-            throw new BusinessException(
-                    "Ya existe un cliente con numero de cedula " + request.cedula()
-            );
+        if(request.cedula() !=null && !request.cedula().isBlank()){
+            clienteRepository.findByCedula(request.cedula()).ifPresent(existing -> {
+                throw new DuplicateResourceException("Ya existe un cliente con número de cédula " + request.cedula(), existing.getGlobalId().toString());
+            });
+        }
+        if(request.phone() !=null && !request.phone().isBlank()){
+            clienteRepository.findByPhone(request.phone()).ifPresent(existing -> {
+                throw new DuplicateResourceException("Ya existe un cliente con número de teléfono " + request.phone(), existing.getGlobalId().toString());
+            });
         }
         Cliente cliente = clienteMapper.toEntity(request);
         Cliente saved = clienteRepository.save(cliente);
@@ -75,12 +100,22 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional
     @Auditable(operation = "UPDATE_CLIENTE", entity = "clientes")
+    @PreAuthorize("hasRole('ADMIN')")
     public ClienteResponse update(UUID globalId, UpdateClienteRequest request) {
         Cliente cliente = findEntityOrThrow(globalId);
-                if(request.cedula() !=null && !request.cedula().isBlank()
-                && clienteRepository.existsByCedulaAndIdNot(request.cedula(), cliente.getId())){
-                    throw new BusinessException(
-                            "Ya existe un Cliente Con la cedular"+ request.cedula());
+                if(request.cedula() !=null && !request.cedula().isBlank()){
+                    clienteRepository.findByCedula(request.cedula()).ifPresent(existing -> {
+                        if (!existing.getId().equals(cliente.getId())) {
+                            throw new DuplicateResourceException("Ya existe un cliente con la cédula " + request.cedula(), existing.getGlobalId().toString());
+                        }
+                    });
+                }
+                if(request.phone() != null && !request.phone().isBlank()){
+                    clienteRepository.findByPhone(request.phone()).ifPresent(existing -> {
+                        if (!existing.getId().equals(cliente.getId())) {
+                            throw new DuplicateResourceException("Ya existe un cliente con el teléfono " + request.phone(), existing.getGlobalId().toString());
+                        }
+                    });
                 }
                 clienteMapper.applyUpdates(cliente, request);
                 Cliente saved = clienteRepository.save(cliente);
@@ -96,12 +131,28 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional
     @Auditable(operation = "DELETE_CLIENTE", entity = "clientes")
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(UUID globalId) {
         Cliente cliente = findEntityOrThrow(globalId);
-        cliente.setStatus(ClienteStatus.INACTIVO);
+        cliente.setStatus(ClienteStatus.ELIMINADO);
         clienteRepository.save(cliente);
         log.info("Cliente eliminado: globalId={}", globalId);
 
+    }
+
+    @Override
+    @Transactional
+    @Auditable(operation = "HARD_DELETE_CLIENTE", entity = "clientes")
+    @PreAuthorize("hasRole('ADMIN')")
+    public void hardDelete(UUID globalId) {
+        Cliente cliente = findEntityOrThrow(globalId);
+        try {
+            clienteRepository.delete(cliente);
+            clienteRepository.flush();
+            log.info("Cliente eliminado físicamente: globalId={}", globalId);
+        } catch (DataIntegrityViolationException ex) {
+            throw new BusinessException("El cliente tiene operaciones asociadas y no puede ser eliminado.");
+        }
     }
 
 }
