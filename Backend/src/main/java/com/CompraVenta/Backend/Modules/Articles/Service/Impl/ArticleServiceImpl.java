@@ -39,7 +39,7 @@ public class ArticleServiceImpl implements ArticleService {
         boolean isAdmin = SecurityContext.hasRole("ADMIN");
         boolean effectiveOnlyAvailable = isAdmin ? onLyAvailable :Boolean.TRUE;
         return PageResponse.from(
-                ArticleRepository.findByFilters(search,category,effectiveOnlyAvailable, pageable).map(articleMapper::toResponse)
+                articleRepository.findByFilters(search,category,effectiveOnlyAvailable, pageable).map(articleMapper::toResponse)
         );
     }
     @Override
@@ -54,7 +54,7 @@ public class ArticleServiceImpl implements ArticleService {
     @PreAuthorize("hasRole('ADMIN')")
     @Auditable(operation = "CREATE_ARTICLE", entity = "articles")
     public ArticleResponse create(CreateArticleRequest request){
-        Article article = articleMapper.toEntoty(request);
+        Article article = articleMapper.toEntity(request);
 
         if(article.hasNegativeMargin()){
             log.warn("Articulo '{}' creado con marge neagtivo: compra={}, venta{}," +
@@ -109,7 +109,7 @@ public class ArticleServiceImpl implements ArticleService {
             throw new BusinessException(String.format("Stock insuficiente para el artículo '%s'. Disponible: %d, solicitado: %d",
                     article.getNameArticle(),article.getAmount(),resquest.quantity()));
         }
-        int update = articleRepository.adjustStock(article.getId(),resquest.quantity());
+        int update = articleRepository.adjustStock(article.getId(), -resquest.quantity());
         if (update == 0){
             throw new BusinessException("No se pudo reducir el stock. Verifique la cantidad disponible."+ globalId);
         }

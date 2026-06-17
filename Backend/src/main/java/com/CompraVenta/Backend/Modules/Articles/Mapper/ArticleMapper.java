@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ArticleMapper {
-    public Article toEntoty(CreateArticleRequest request){
+    public Article toEntity(CreateArticleRequest request){
         return Article.builder()
                 .nameArticle(request.nameArticle().trim())
                 .description(request.description())

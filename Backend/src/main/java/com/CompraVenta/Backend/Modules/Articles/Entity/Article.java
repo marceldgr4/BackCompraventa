@@ -66,7 +66,7 @@ public class Article extends BaseEntity {
         return this.amount !=null && this.amount > 0;
     }
     public boolean hasNegativeMargin(){
-        return purchasePrice !=null && purchasePrice.compareTo(BigDecimal.ZERO) >= 0;
+        return purchasePrice != null && price != null && purchasePrice.compareTo(price) >= 0;
     }
     @Override
     public boolean equals(Object o) {
