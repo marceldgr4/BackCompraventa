@@ -80,7 +80,7 @@ public class ArticleController {
         return ResponseEntity.created(location).body(ApiResponse.ok(created));
     }
     //---PUT---
-    @PutMapping
+    @PutMapping("/{globalId}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actulizar articulos completos")
     public ResponseEntity<ApiResponse<ArticleResponse>> update(
@@ -91,7 +91,7 @@ public class ArticleController {
         return ResponseEntity.ok(ApiResponse.ok(articleService.update(globalId, request)));
     }
     //---DELETE----
-    @DeleteMapping("(/{globalId}")
+    @DeleteMapping("/{globalId}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar articulos")
     public ResponseEntity<Void> delete(@PathVariable UUID globalId){

@@ -8,7 +8,7 @@ import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 public record CreateArticleRequest(
-        @NotBlank(,message = "El nombre del articulo es obligatorio")
+        @NotBlank(message = "El nombre del articulo es obligatorio")
         @Size(max = 255, message = "El nombre no puede supera 255 caractres")
         String nameArticle,
 
