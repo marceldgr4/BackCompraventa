@@ -1,6 +1,6 @@
 package com.CompraVenta.Backend.Modules.Pawns.Repository;
 
-import com.CompraVenta.Backend.Modules.Pawns.Emuns.PawnStatus;
+import com.CompraVenta.Backend.Modules.Pawns.Enums.PawnStatus;
 import com.CompraVenta.Backend.Modules.Pawns.Entity.Pawn;
 
 import org.springframework.data.domain.Page;

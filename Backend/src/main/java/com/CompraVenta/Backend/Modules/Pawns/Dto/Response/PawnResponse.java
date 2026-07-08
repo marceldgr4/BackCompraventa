@@ -1,6 +1,6 @@
 package com.CompraVenta.Backend.Modules.Pawns.Dto.Response;
 
-import com.CompraVenta.Backend.Modules.Pawns.Emuns.PawnStatus;
+import com.CompraVenta.Backend.Modules.Pawns.Enums.PawnStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigDecimal;

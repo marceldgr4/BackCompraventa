@@ -18,18 +18,18 @@
 | Módulo Employee           | 100%   |
 | Módulo Clients            | 100%   |
 | Módulo Articles           | 100%   |
-| Módulo Pawns              | 0%     |
+| Módulo Pawns              | 100%   |
 | Módulo Sales              | 0%     |
 | Módulo Purchases          | 0%     |
 | Motor Sync                | 15%    |
 | Tests                     | 5%     |
-| **TOTAL GLOBAL**          | **~60%** |
+| **TOTAL GLOBAL**          | **~75%** |
 
 ### Resumen Ejecutivo
 
 El proyecto tiene una **base de infraestructura sólida y bien construida**. Los módulos transversales (Config, Security, Audit, Exception, Shared) están completos y con calidad alta. Los módulos Auth, Employee y Clients están implementados con buenas prácticas y lógica de negocio correcta.
 
-Sin embargo, **3 de los 7 módulos de dominio principal están completamente ausentes**: Pawns, Sales y Purchases. El motor de sincronización offline solo tiene la entidad `SyncOutbox` sin ningún servicio operacional. Los tests prácticamente no existen más allá de los stubs generados por Spring Initializr.
+Sin embargo, **2 de los 7 módulos de dominio principal están ausentes**: Sales y Purchases. El motor de sincronización offline solo tiene la entidad `SyncOutbox` sin ningún servicio operacional. Los tests prácticamente no existen más allá de los stubs generados por Spring Initializr.
 
 El proyecto está **listo para continuar el desarrollo** sobre una base limpia. No hay deudas técnicas críticas pendientes en los módulos ya implementados (los bugs previamente detectados en versiones anteriores han sido corregidos según las memorias del proyecto).
 
@@ -41,7 +41,7 @@ El proyecto está **listo para continuar el desarrollo** sobre una base limpia. 
 ✅ Migraciones de BD completas para todas las tablas  
 ⚠️ Motor sync incompleto (no bloquea el desarrollo de módulos de dominio)  
 ❌ Sin tests unitarios ni de integración reales  
-❌ 3 módulos de negocio core ausentes  
+❌ 2 módulos de negocio core ausentes  
 
 ---
 
@@ -262,24 +262,18 @@ El proyecto está **listo para continuar el desarrollo** sobre una base limpia. 
 
 ### 🤝 Módulo: Pawns (Empeños)
 
-**Estado: ❌ NO IMPLEMENTADO (0%)**
+**Estado: ✅ 100% COMPLETO**
 
-**HUs pendientes:** HU-PAW-01 a HU-PAW-07
+**HUs cubiertas:** HU-PAW-01 a HU-PAW-07
 
-No existe ningún archivo en `Modules/Pawns/`. La tabla `pawns` y `pawn_payments` están en la migración. La función `fn_expire_overdue_pawns()` está en la BD.
-
-**Dependencias necesarias antes de implementar:**
-- Módulo Articles (FK `article_id`)
-- Módulo Clients (FK `cliente_id`)
-
-**Lo que debe implementarse:**
-- Transacción atómica: INSERT pawn + UPDATE stock article
-- Empeño ágil (cliente + artículo + empeño en una sola TX)
-- Registro de pagos de cuota
-- Registro de cuota impagada
-- Expiración automática via `@Scheduled`
-- Estados terminales inmutables
-- Marcado como devuelto
+**Funcionalidades implementadas:**
+- Transacciones atómicas seguras: `INSERT pawn` + `UPDATE stock article`.
+- Empeño ágil: Creación de cliente rápido, artículo y empeño en una sola transacción unificada.
+- Registro de pagos de cuota y cuotas impagadas, con transiciones de estado automatizadas (a FINALIZADO o PERDIDO).
+- Expiración automática vía `@Scheduled` llamando a la función nativa `fn_expire_overdue_pawns`.
+- Máquina de estados validada internamente en la entidad `Pawn` para estados inmutables.
+- Marcado manual como devuelto/retirado.
+- Capas de repositorio, servicio e integración de API REST completas con `@PreAuthorize`.
 
 ---
 
@@ -359,13 +353,13 @@ La tabla `sync_outbox` existe en BD con triggers que capturan cambios automátic
 | HU-ART-03 | Editar artículo | ✅ Completo | |
 | HU-ART-04 | Gestión de stock | ✅ Completo | |
 | HU-ART-05 | Eliminar artículo (Admin) | ✅ Completo | |
-| HU-PAW-01 | Registrar empeño | ❌ Pendiente | |
-| HU-PAW-02 | Empeño ágil | ❌ Pendiente | |
-| HU-PAW-03 | Registrar pago cuota | ❌ Pendiente | |
-| HU-PAW-04 | Cuota impagada (Admin) | ❌ Pendiente | |
-| HU-PAW-05 | Marcar empeño devuelto | ❌ Pendiente | |
-| HU-PAW-06 | Expiración automática | ❌ Pendiente | Función BD lista, falta `@Scheduled` |
-| HU-PAW-07 | Filtrar empeños por estado | ❌ Pendiente | |
+| HU-PAW-01 | Registrar empeño | ✅ Completo | |
+| HU-PAW-02 | Empeño ágil | ✅ Completo | |
+| HU-PAW-03 | Registrar pago cuota | ✅ Completo | |
+| HU-PAW-04 | Cuota impagada (Admin) | ✅ Completo | |
+| HU-PAW-05 | Marcar empeño devuelto | ✅ Completo | |
+| HU-PAW-06 | Expiración automática | ✅ Completo | Función BD conectada a `@Scheduled` |
+| HU-PAW-07 | Filtrar empeños por estado | ✅ Completo | |
 | HU-SAL-01 | Registrar venta | ❌ Pendiente | SP en BD listo |
 | HU-SAL-02 | Filtrar ventas | ❌ Pendiente | |
 | HU-SAL-03 | Eliminar venta (Admin) | ❌ Pendiente | |
@@ -388,7 +382,7 @@ La tabla `sync_outbox` existe en BD con triggers que capturan cambios automátic
 | RF-01.6 | Solo Admin registra empleados | ✅ |
 | RF-01.7 | Logout invalida token en Redis | ✅ |
 | RF-02.1..8 | Módulo Articles | ✅ Completo |
-| RF-03.1..10 | Módulo Pawns | ❌ Pendiente |
+| RF-03.1..10 | Módulo Pawns | ✅ Completo |
 | RF-04.1..7 | Módulo Sales | ❌ Pendiente |
 | RF-05.1..5 | Módulo Purchases | ❌ Pendiente |
 | RF-06.1 | Tipos COMPLETO/RAPIDO | ✅ |
@@ -795,7 +789,7 @@ class AuthControllerIT {
 | Aspecto | Estado | Acción |
 |---|---|---|
 | Base lista para producción | ✅ Auth + Employee + Clients + Articles | Puede demostrarse ya |
-| Próximo módulo crítico | ❌ Pawns | Implementar inmediatamente |
+| Próximo módulo crítico | ❌ Sales (Ventas) | Implementar inmediatamente |
 | Bug bloqueante activo | ⚠️ Permisos soft delete | Corregir en 5 minutos |
 | Riesgo mayor | ❌ Sin tests | Agregar en paralelo con los nuevos módulos |
 | BD completamente lista | ✅ V1 + V2 | Sin migraciones pendientes |
