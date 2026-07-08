@@ -18,12 +18,10 @@ public interface ArticleRepository extends JpaRepository<Article,Long> {
     Optional<Article>findByGlobalId(UUID globalId);
     boolean existsByGlobalId(UUID globalId);
 
-    @Query("""
-        SELECT a FROM Article a
-        WHERE(:search IS NULL OR LOWER(a.nameArticle)LIKE LOWER(CONCAT('%',:search,'%')))
-        AND(:category IS NULL OR a.category =:category)
-        AND(:onlyAvailable IS NULL OR :onlyAvailable = FALSE OR a.amount > 0)
-""")
+    @Query("SELECT a FROM Article a " +
+           "WHERE (:search IS NULL OR LOWER(a.nameArticle) LIKE LOWER(CONCAT('%',:search,'%'))) " +
+           "AND (:category IS NULL OR a.category = :category) " +
+           "AND (:onlyAvailable IS NULL OR :onlyAvailable = FALSE OR a.amount > 0)")
     Page<Article> findByFilters(
             @Param("search") String search,
             @Param("category") ArticleCategory category,
@@ -35,10 +33,8 @@ public interface ArticleRepository extends JpaRepository<Article,Long> {
     nativeQuery = true)
     boolean hasActiveSales(@Param("articleId") long articleId);
 
-    @Query(value = """
-SELECT COUNT (*) >0 FROM public.pawns p
-WHERE p.article_id =:articleId AND p.status IN ('ACTIVO','VENCIDO')
-""", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) > 0 FROM public.pawns p " +
+                   "WHERE p.article_id = :articleId AND p.status IN ('ACTIVO','VENCIDO')", nativeQuery = true)
     boolean hasActivePawns(@Param("articleId") long articleId);
 
     @Modifying

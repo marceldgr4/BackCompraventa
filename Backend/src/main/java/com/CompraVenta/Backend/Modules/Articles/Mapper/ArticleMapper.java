@@ -11,15 +11,15 @@ import org.springframework.stereotype.Component;
 public class ArticleMapper {
     public Article toEntity(CreateArticleRequest request){
         return Article.builder()
-                .nameArticle(request.nameArticle().trim())
-                .description(request.description())
-                .category(request.category())
-                .sourceType(request.sourceType() !=null ? request.sourceType(): SourceType.OTROS)
-                .itemState(request.itemStatus())
-                .amount(request.amount()!=null ? request.amount():0)
-                .price(request.price())
-                .purchasePrice(request.purchasePrice())
-                .clienteId(request.clienteId())
+                .nameArticle(request.getNameArticle() != null ? request.getNameArticle().trim() : null)
+                .description(request.getDescription())
+                .category(request.getCategory())
+                .sourceType(request.getSourceType() !=null ? request.getSourceType(): SourceType.OTROS)
+                .itemState(request.getItemStatus())
+                .amount(request.getAmount()!=null ? request.getAmount():0)
+                .price(request.getPrice())
+                .purchasePrice(request.getPurchasePrice())
+                .clienteId(request.getClienteId())
                 .build();
     }
     public ArticleResponse toResponse(Article article){
@@ -51,12 +51,6 @@ public class ArticleMapper {
         if (request.purchasePrice()!=null)article.setPurchasePrice(request.purchasePrice());
     }
 
-    public void applyBasicUpdate(Article article, UpdateArticleRequest request){
-        if(request.nameArticle()!=null)article.setNameArticle(request.nameArticle().trim());
-        if(request.description()!=null)article.setDescription(request.description().trim());
-        if(request.category()!=null)article.setCategory(request.category());
-        if (request.itemStatus() !=null)article.setItemState(request.itemStatus());
 
-    }
 }
 
