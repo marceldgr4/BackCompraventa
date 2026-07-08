@@ -7,31 +7,34 @@ import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
-public record CreateArticleRequest(
-        @NotBlank(message = "El nombre del articulo es obligatorio")
-        @Size(max = 255, message = "El nombre no puede supera 255 caractres")
-        String nameArticle,
+import lombok.Data;
 
-        @Size(max = 2000, message = "La descripcion no puede sueperar 2000 caractres")
-        String description,
+@Data
+public class CreateArticleRequest {
 
-        @NotNull(message = "la categoria es obligatoria")
-        ArticleCategory category,
+    @NotBlank(message = "El nombre del articulo es obligatorio")
+    @Size(max = 255, message = "El nombre no puede supera 255 caractres")
+    private String nameArticle;
 
-        SourceType sourceType,
-        ItemStatus itemStatus,
+    @Size(max = 2000, message = "La descripcion no puede sueperar 2000 caractres")
+    private String description;
 
-        @PositiveOrZero(message = "la cantidad no puede ser negativa")
-        Integer amount,
+    @NotNull(message = "la categoria es obligatoria")
+    private ArticleCategory category;
 
-        @NotNull(message = "El precio de venta es obligatorio")
-        @DecimalMin(value = "0.01",message = "el precio debe ser mayor a 0")
-        @Digits(integer = 10, fraction = 2,message = "el precio no tener mas de 2 deciamles")
-        BigDecimal price,
+    private SourceType sourceType;
+    private ItemStatus itemStatus;
 
-        @Digits(integer = 10,fraction = 2)
-        BigDecimal purchasePrice,
+    @PositiveOrZero(message = "la cantidad no puede ser negativa")
+    private Integer amount;
 
-        Long clienteId
-) {
+    @NotNull(message = "El precio de venta es obligatorio")
+    @DecimalMin(value = "0.01", message = "el precio debe ser mayor a 0")
+    @Digits(integer = 10, fraction = 2, message = "el precio no tener mas de 2 deciamles")
+    private BigDecimal price;
+
+    @Digits(integer = 10, fraction = 2)
+    private BigDecimal purchasePrice;
+
+    private Long clienteId;
 }

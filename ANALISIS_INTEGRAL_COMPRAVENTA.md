@@ -333,12 +333,12 @@ Los siguientes módulos están referenciados en la documentación OpenAPI pero *
 
 | Módulo | Controller | Service | Repository | Entity | DTO |
 |---|---|---|---|---|---|
-| Auth | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Articles | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Auth | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Articles | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Pawns (Empeños) | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Sales | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Clients | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Employees | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Clients | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Employees | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Dashboard | ❌ | ❌ | — | — | ❌ |
 
 ---

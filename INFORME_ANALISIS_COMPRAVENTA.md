@@ -17,19 +17,19 @@
 | Módulo Auth               | 100%   |
 | Módulo Employee           | 100%   |
 | Módulo Clients            | 100%   |
-| Módulo Articles           | 0%     |
+| Módulo Articles           | 100%   |
 | Módulo Pawns              | 0%     |
 | Módulo Sales              | 0%     |
 | Módulo Purchases          | 0%     |
 | Motor Sync                | 15%    |
 | Tests                     | 5%     |
-| **TOTAL GLOBAL**          | **~45%** |
+| **TOTAL GLOBAL**          | **~60%** |
 
 ### Resumen Ejecutivo
 
 El proyecto tiene una **base de infraestructura sólida y bien construida**. Los módulos transversales (Config, Security, Audit, Exception, Shared) están completos y con calidad alta. Los módulos Auth, Employee y Clients están implementados con buenas prácticas y lógica de negocio correcta.
 
-Sin embargo, **4 de los 7 módulos de dominio principal están completamente ausentes**: Articles, Pawns, Sales y Purchases. El motor de sincronización offline solo tiene la entidad `SyncOutbox` sin ningún servicio operacional. Los tests prácticamente no existen más allá de los stubs generados por Spring Initializr.
+Sin embargo, **3 de los 7 módulos de dominio principal están completamente ausentes**: Pawns, Sales y Purchases. El motor de sincronización offline solo tiene la entidad `SyncOutbox` sin ningún servicio operacional. Los tests prácticamente no existen más allá de los stubs generados por Spring Initializr.
 
 El proyecto está **listo para continuar el desarrollo** sobre una base limpia. No hay deudas técnicas críticas pendientes en los módulos ya implementados (los bugs previamente detectados en versiones anteriores han sido corregidos según las memorias del proyecto).
 
@@ -37,11 +37,11 @@ El proyecto está **listo para continuar el desarrollo** sobre una base limpia. 
 
 ✅ Infraestructura lista  
 ✅ Seguridad JWT operacional  
-✅ Patrones de referencia establecidos (Employee como módulo canónico)  
+✅ Patrones de referencia establecidos (Employee y Articles como módulos base)  
 ✅ Migraciones de BD completas para todas las tablas  
 ⚠️ Motor sync incompleto (no bloquea el desarrollo de módulos de dominio)  
 ❌ Sin tests unitarios ni de integración reales  
-❌ 4 módulos de negocio core ausentes  
+❌ 3 módulos de negocio core ausentes  
 
 ---
 
@@ -245,19 +245,16 @@ El proyecto está **listo para continuar el desarrollo** sobre una base limpia. 
 
 ### 📦 Módulo: Articles
 
-**Estado: ❌ NO IMPLEMENTADO (0%)**
+**Estado: ✅ 100% COMPLETO**
 
-**HUs pendientes:** HU-ART-01, HU-ART-02, HU-ART-03, HU-ART-04, HU-ART-05
+**HUs cubiertas:** HU-ART-01 ✅, HU-ART-02 ✅, HU-ART-03 ✅, HU-ART-04 ✅, HU-ART-05 ✅
 
-No existe ningún archivo en `Modules/Articles/`. La migración `V1__schema_completo.sql` sí crea la tabla `articles` con todos los campos necesarios.
-
-**Lo que debe implementarse:**
+**Funcionalidades implementadas:**
 - Entity `Article` extendiendo `BaseEntity`
 - Enums: `ArticleCategory`, `SourceType`, `ItemState`
 - Repository con queries de búsqueda, filtros y paginación
-- DTOs: `CreateArticleRequest`, `UpdateArticleRequest`, `ArticleResponse`
-- Mapper
-- Service con lógica de stock (no puede ser negativo)
+- DTOs y Mapper completo
+- Service con lógica de stock (sin valores negativos)
 - Controller con endpoints completos
 - Integración con `@Auditable`
 
@@ -357,11 +354,11 @@ La tabla `sync_outbox` existe en BD con triggers que capturan cambios automátic
 | HU-AUTH-02 | Refresh token | ✅ Completo | Rotación implementada |
 | HU-AUTH-03 | Logout | ✅ Completo | Blacklist Redis |
 | HU-AUTH-04 | Registro empleado (Admin) | ✅ Completo | |
-| HU-ART-01 | Listar inventario | ❌ Pendiente | |
-| HU-ART-02 | Crear artículo (Admin) | ❌ Pendiente | |
-| HU-ART-03 | Editar artículo | ❌ Pendiente | |
-| HU-ART-04 | Gestión de stock | ❌ Pendiente | |
-| HU-ART-05 | Eliminar artículo (Admin) | ❌ Pendiente | |
+| HU-ART-01 | Listar inventario | ✅ Completo | |
+| HU-ART-02 | Crear artículo (Admin) | ✅ Completo | |
+| HU-ART-03 | Editar artículo | ✅ Completo | |
+| HU-ART-04 | Gestión de stock | ✅ Completo | |
+| HU-ART-05 | Eliminar artículo (Admin) | ✅ Completo | |
 | HU-PAW-01 | Registrar empeño | ❌ Pendiente | |
 | HU-PAW-02 | Empeño ágil | ❌ Pendiente | |
 | HU-PAW-03 | Registrar pago cuota | ❌ Pendiente | |
@@ -390,7 +387,7 @@ La tabla `sync_outbox` existe en BD con triggers que capturan cambios automátic
 | RF-01.5 | Bloqueo tras 5 intentos (15 min) | ✅ |
 | RF-01.6 | Solo Admin registra empleados | ✅ |
 | RF-01.7 | Logout invalida token en Redis | ✅ |
-| RF-02.1..8 | Módulo Articles | ❌ Pendiente |
+| RF-02.1..8 | Módulo Articles | ✅ Completo |
 | RF-03.1..10 | Módulo Pawns | ❌ Pendiente |
 | RF-04.1..7 | Módulo Sales | ❌ Pendiente |
 | RF-05.1..5 | Módulo Purchases | ❌ Pendiente |
@@ -797,14 +794,12 @@ class AuthControllerIT {
 
 | Aspecto | Estado | Acción |
 |---|---|---|
-| Base lista para producción | ✅ Auth + Employee + Clients | Puede demostrarse ya |
-| Próximo módulo crítico | ❌ Articles | Implementar inmediatamente |
+| Base lista para producción | ✅ Auth + Employee + Clients + Articles | Puede demostrarse ya |
+| Próximo módulo crítico | ❌ Pawns | Implementar inmediatamente |
 | Bug bloqueante activo | ⚠️ Permisos soft delete | Corregir en 5 minutos |
-| Riesgo mayor | ❌ Sin tests | Agregar en paralelo con Articles |
+| Riesgo mayor | ❌ Sin tests | Agregar en paralelo con los nuevos módulos |
 | BD completamente lista | ✅ V1 + V2 | Sin migraciones pendientes |
 | Motor sync | ⚠️ Tabla lista, sin servicio | No urgente hasta tener módulos de dominio |
-
-**El siguiente paso inmediato es:** corregir el bug de permisos en `ClienteController` y luego implementar el módulo `Articles` completo siguiendo el patrón del módulo `Employee`.
 
 ---
 
