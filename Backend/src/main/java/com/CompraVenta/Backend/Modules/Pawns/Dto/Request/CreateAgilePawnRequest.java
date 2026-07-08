@@ -7,7 +7,7 @@ import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record CreateAgilPawnRequest(
+public record CreateAgilePawnRequest(
         // ── Datos del cliente rápido ─────────────────────────────────────────
         @NotBlank(message = "El nombre del cliente es obligatorio")
         @Size(max = 100, message = "El nombre no puede superar 100 caracteres")

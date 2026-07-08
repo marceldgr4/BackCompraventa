@@ -3,7 +3,7 @@ package com.CompraVenta.Backend.Modules.Pawns.Entity;
 import com.CompraVenta.Backend.Exception.custom.BusinessException;
 import com.CompraVenta.Backend.Modules.Articles.Entity.Article;
 import com.CompraVenta.Backend.Modules.Clients.Entity.Cliente;
-import com.CompraVenta.Backend.Modules.Pawns.Emuns.PawnStatus;
+import com.CompraVenta.Backend.Modules.Pawns.Enums.PawnStatus;
 import com.CompraVenta.Backend.Shared.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;

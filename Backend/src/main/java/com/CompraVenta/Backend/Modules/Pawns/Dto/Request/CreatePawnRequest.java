@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public record CreatePawnResquest(
+public record CreatePawnRequest(
         @NotNull(message = "El articulo es obligatorio")
         UUID articleGlobalId,
         @NotNull(message = "El cliente es obligatorio")

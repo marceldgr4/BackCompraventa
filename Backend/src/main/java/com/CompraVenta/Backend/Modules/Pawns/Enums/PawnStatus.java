@@ -1,4 +1,4 @@
-package com.CompraVenta.Backend.Modules.Pawns.Emuns;
+package com.CompraVenta.Backend.Modules.Pawns.Enums;
 
 public enum PawnStatus {
     ACTIVO,
