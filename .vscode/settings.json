@@ -1,5 +1,5 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "interactive",
-    "java.jdt.ls.java.home": "C:\\Users\\Admin\\AppData\\Roaming\\Antigravity IDE\\User\\oracleJdk-21"
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.jdt.ls.java.home": "C:\\Users\\Admin\\AppData\\Roaming\\Antigravity IDE\\User\\oracleJdk-21"
 }

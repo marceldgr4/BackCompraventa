@@ -9,6 +9,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.CompraVenta.Backend.Shared.entity.BaseEntity;
+
 @Builder
 @Entity
 @Table( name = "sales", schema = "public",
@@ -23,14 +25,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class Sale {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "global_id", nullable = false, unique = true, updatable = false)
-    @Builder.Default
-    private UUID globalId = UUID.randomUUID();
+public class Sale extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false, insertable = false, updatable = false)
@@ -55,8 +50,7 @@ public class Sale {
     @Column(name = "notes",columnDefinition = "TEXT")
     private String notes;
 
-    @Column(name = "created_at",nullable = false,updatable = false)
-    private LocalDateTime createdAt;
+
 
     public boolean isAnonymous() {
         return clienteId == null;
