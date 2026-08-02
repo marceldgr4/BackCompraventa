@@ -6,6 +6,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+import com.CompraVenta.Backend.Shared.entity.BaseEntity;
+
 @Builder
 @Entity
 @Table(
@@ -20,10 +22,7 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SaleDetails {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class SaleDetails extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sale_id", nullable = false, insertable = false,updatable = false)

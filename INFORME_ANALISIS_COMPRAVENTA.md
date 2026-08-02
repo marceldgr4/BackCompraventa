@@ -19,17 +19,17 @@
 | Módulo Clients            | 100%   |
 | Módulo Articles           | 100%   |
 | Módulo Pawns              | 100%   |
-| Módulo Sales              | 0%     |
+| Módulo Sales              | 100%   |
 | Módulo Purchases          | 0%     |
 | Motor Sync                | 15%    |
 | Tests                     | 5%     |
-| **TOTAL GLOBAL**          | **~75%** |
+| **TOTAL GLOBAL**          | **~85%** |
 
 ### Resumen Ejecutivo
 
 El proyecto tiene una **base de infraestructura sólida y bien construida**. Los módulos transversales (Config, Security, Audit, Exception, Shared) están completos y con calidad alta. Los módulos Auth, Employee y Clients están implementados con buenas prácticas y lógica de negocio correcta.
 
-Sin embargo, **2 de los 7 módulos de dominio principal están ausentes**: Sales y Purchases. El motor de sincronización offline solo tiene la entidad `SyncOutbox` sin ningún servicio operacional. Los tests prácticamente no existen más allá de los stubs generados por Spring Initializr.
+Sin embargo, **1 de los 7 módulos de dominio principal está ausente**: Purchases. El motor de sincronización offline solo tiene la entidad `SyncOutbox` sin ningún servicio operacional. Los tests prácticamente no existen más allá de los stubs generados por Spring Initializr.
 
 El proyecto está **listo para continuar el desarrollo** sobre una base limpia. No hay deudas técnicas críticas pendientes en los módulos ya implementados (los bugs previamente detectados en versiones anteriores han sido corregidos según las memorias del proyecto).
 
@@ -41,7 +41,7 @@ El proyecto está **listo para continuar el desarrollo** sobre una base limpia. 
 ✅ Migraciones de BD completas para todas las tablas  
 ⚠️ Motor sync incompleto (no bloquea el desarrollo de módulos de dominio)  
 ❌ Sin tests unitarios ni de integración reales  
-❌ 2 módulos de negocio core ausentes  
+❌ 1 módulo de negocio core ausente  
 
 ---
 
@@ -279,14 +279,27 @@ El proyecto está **listo para continuar el desarrollo** sobre una base limpia. 
 
 ### 💰 Módulo: Sales (Ventas)
 
-**Estado: ❌ NO IMPLEMENTADO (0%)**
+**Estado: ✅ 100% COMPLETO**
 
-**HUs pendientes:** HU-SAL-01, HU-SAL-02, HU-SAL-03
+**HUs cubiertas:** HU-SAL-01 ✅, HU-SAL-02 ✅, HU-SAL-03 ✅
 
-No existe ningún archivo en `Modules/Sales/`. La tabla `sales` y `sales_details` están en la migración. El stored procedure `register_sale()` está implementado en `V1__schema_completo.sql`.
+| Componente | Estado |
+|---|---|
+| `SaleController` | ✅ |
+| `SaleService` / `SaleServiceImpl` | ✅ |
+| `SaleRepository` / `SaleProcedureRepository` | ✅ |
+| `Sale` / `SaleDetails` entity | ✅ |
+| `SaleMapper` | ✅ |
+| DTOs completos | ✅ |
 
-**Dependencias necesarias:**
-- Módulo Articles (para validar stock)
+**Funcionalidades implementadas:**
+- Integración con el stored procedure `register_sale()` en PostgreSQL.
+- Soft delete de ventas y devolución automática de inventario a los artículos afectados.
+- Paginación y filtros por rango de fechas y clientes.
+- Control de roles (ADMIN / EMPLEADO) para listado y eliminación.
+
+**Dependencias:**
+- Requiere Módulo Articles (para gestionar stock).
 
 ---
 
@@ -360,9 +373,9 @@ La tabla `sync_outbox` existe en BD con triggers que capturan cambios automátic
 | HU-PAW-05 | Marcar empeño devuelto | ✅ Completo | |
 | HU-PAW-06 | Expiración automática | ✅ Completo | Función BD conectada a `@Scheduled` |
 | HU-PAW-07 | Filtrar empeños por estado | ✅ Completo | |
-| HU-SAL-01 | Registrar venta | ❌ Pendiente | SP en BD listo |
-| HU-SAL-02 | Filtrar ventas | ❌ Pendiente | |
-| HU-SAL-03 | Eliminar venta (Admin) | ❌ Pendiente | |
+| HU-SAL-01 | Registrar venta | ✅ Completo | Usa SP `register_sale()` |
+| HU-SAL-02 | Filtrar ventas | ✅ Completo | |
+| HU-SAL-03 | Eliminar venta (Admin) | ✅ Completo | Soft delete y rollback de stock |
 | HU-PUR-01 | Registrar compra | ❌ Pendiente | |
 | HU-CLI-01 | CRUD clientes | ✅ Completo | Soft delete abierto, search incluye phone |
 | HU-EMP-01 | Gestión empleados (Admin) | ✅ Completo | |
@@ -383,7 +396,7 @@ La tabla `sync_outbox` existe en BD con triggers que capturan cambios automátic
 | RF-01.7 | Logout invalida token en Redis | ✅ |
 | RF-02.1..8 | Módulo Articles | ✅ Completo |
 | RF-03.1..10 | Módulo Pawns | ✅ Completo |
-| RF-04.1..7 | Módulo Sales | ❌ Pendiente |
+| RF-04.1..7 | Módulo Sales | ✅ Completo |
 | RF-05.1..5 | Módulo Purchases | ❌ Pendiente |
 | RF-06.1 | Tipos COMPLETO/RAPIDO | ✅ |
 | RF-06.2 | Promover RAPIDO → COMPLETO | ✅ |
@@ -698,28 +711,9 @@ public void expireOverduePawns() {
 
 ---
 
-### Fase 3 — Módulo Sales (estimado: 3-4 horas)
+### Fase 3 — Módulo Sales (✅ COMPLETADA)
 
-> Requiere Phase 1 completa. El stored procedure `register_sale()` ya está en BD.
-
-**Tarea 3.1 — Entities**
-```
-Modules/Sales/Entity/Sale.java
-Modules/Sales/Entity/SaleDetail.java
-```
-
-**Tarea 3.2 — Service: invocar stored procedure**
-```java
-@Transactional
-public SaleResponse create(CreateSaleRequest request) {
-    // Llamar a register_sale() via JPA native query
-    // Retornar la venta creada
-}
-```
-
-**Tarea 3.3 — Controller con RBAC**
-- Empleado: solo sus propias ventas
-- Admin: todas las ventas
+> Módulo de ventas completado exitosamente. Se implementó la integración nativa con PostgreSQL y el borrado lógico con reposición de inventario.
 
 ---
 
@@ -788,8 +782,8 @@ class AuthControllerIT {
 
 | Aspecto | Estado | Acción |
 |---|---|---|
-| Base lista para producción | ✅ Auth + Employee + Clients + Articles | Puede demostrarse ya |
-| Próximo módulo crítico | ❌ Sales (Ventas) | Implementar inmediatamente |
+| Base lista para producción | ✅ Auth + Employee + Clients + Articles + Pawns + Sales | Puede demostrarse ya |
+| Próximo módulo crítico | ❌ Purchases (Compras) | Implementar inmediatamente |
 | Bug bloqueante activo | ⚠️ Permisos soft delete | Corregir en 5 minutos |
 | Riesgo mayor | ❌ Sin tests | Agregar en paralelo con los nuevos módulos |
 | BD completamente lista | ✅ V1 + V2 | Sin migraciones pendientes |

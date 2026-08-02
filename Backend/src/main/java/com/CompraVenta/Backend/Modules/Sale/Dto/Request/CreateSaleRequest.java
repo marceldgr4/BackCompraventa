@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record CreateSaleRequest(
-        UUID clinteGlobalId,
+        UUID clienteGlobalId,
         @Size(max = 225, message = "el nombre no puede superar 225 caractres")
         String clienteNombreAnon,
 

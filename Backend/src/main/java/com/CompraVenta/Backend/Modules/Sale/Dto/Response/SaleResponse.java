@@ -20,7 +20,7 @@ public record SaleResponse(
         String clienteFullName,
         String clienteNombreAnon,
 
-        LocalDateTime saleDate,
+        java.time.LocalDate saleDate,
         String notes,
         BigDecimal total,
         List<SaleDetailResponse> details,

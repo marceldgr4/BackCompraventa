@@ -18,7 +18,7 @@ public class SaleMapper {
                 .map(this::toDetailResponse)
                 .toList();
 
-        BigDecimal total = SaleDetailResponse.stream()
+        BigDecimal total = detailResponses.stream()
                 .map(SaleDetailResponse::subtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal:: add);
 
