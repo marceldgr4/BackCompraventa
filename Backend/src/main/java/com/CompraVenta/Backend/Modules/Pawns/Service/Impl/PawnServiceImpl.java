@@ -85,7 +85,7 @@ public class PawnServiceImpl implements PawnService {
 
     @Override
     @Transactional
-    @Auditable(action = "CREATE_PAWN")
+    @Auditable(operation = "CREATE_PAWN")
     public PawnResponse create(CreatePawnRequest request) {
         Employee employee = getCurrentEmployee();
         
@@ -116,7 +116,7 @@ public class PawnServiceImpl implements PawnService {
 
     @Override
     @Transactional
-    @Auditable(action = "CREATE_AGILE_PAWN")
+    @Auditable(operation = "CREATE_AGILE_PAWN")
     public PawnResponse createAgile(CreateAgilePawnRequest request) {
         Employee employee = getCurrentEmployee();
 
@@ -134,7 +134,7 @@ public class PawnServiceImpl implements PawnService {
                 .nameArticle(request.articleName())
                 .description(request.articleDescription())
                 .category(request.articleCategory())
-                .sourceType(SourceType.EMPENO)
+                .sourceType(SourceType.EMPEÑO)
                 .itemState(request.articleItemStatus())
                 .amount(0) // Stock in sales inventory is 0 since it is pawned
                 .price(request.articlePrice())
@@ -160,7 +160,7 @@ public class PawnServiceImpl implements PawnService {
 
     @Override
     @Transactional
-    @Auditable(action = "REGISTER_PAWN_PAYMENT")
+    @Auditable(operation = "REGISTER_PAWN_PAYMENT")
     public PawnPaymentResponse registerPayment(UUID globalId, PawnPaymentRequest request) {
         Pawn pawn = pawnRepository.findByGlobalId(globalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empeño no encontrado"));
@@ -190,7 +190,7 @@ public class PawnServiceImpl implements PawnService {
 
     @Override
     @Transactional
-    @Auditable(action = "REGISTER_MISSED_INSTALLMENT")
+    @Auditable(operation = "REGISTER_MISSED_INSTALLMENT")
     public PawnPaymentResponse registerMissedInstallment(UUID globalId) {
         Pawn pawn = pawnRepository.findByGlobalId(globalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empeño no encontrado"));
@@ -229,7 +229,7 @@ public class PawnServiceImpl implements PawnService {
 
     @Override
     @Transactional
-    @Auditable(action = "MARK_PAWN_RETURNED")
+    @Auditable(operation = "MARK_PAWN_RETURNED")
     public PawnResponse markAsReturned(UUID globalId) {
         Pawn pawn = pawnRepository.findByGlobalId(globalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empeño no encontrado"));
@@ -241,7 +241,7 @@ public class PawnServiceImpl implements PawnService {
 
     @Override
     @Transactional
-    @Auditable(action = "MARK_PAWN_LOST")
+    @Auditable(operation = "MARK_PAWN_LOST")
     public PawnResponse markAsLost(UUID globalId) {
         Pawn pawn = pawnRepository.findByGlobalId(globalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empeño no encontrado"));
@@ -253,7 +253,7 @@ public class PawnServiceImpl implements PawnService {
 
     @Override
     @Transactional
-    @Auditable(action = "MARK_PAWN_EXPIRED")
+    @Auditable(operation = "MARK_PAWN_EXPIRED")
     public PawnResponse markAsExpiredManually(UUID globalId) {
         Pawn pawn = pawnRepository.findByGlobalId(globalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empeño no encontrado"));
@@ -265,7 +265,7 @@ public class PawnServiceImpl implements PawnService {
 
     @Override
     @Transactional
-    @Auditable(action = "DELETE_PAWN")
+    @Auditable(operation = "DELETE_PAWN")
     public void delete(UUID globalId) {
         Pawn pawn = pawnRepository.findByGlobalId(globalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Empeño no encontrado"));

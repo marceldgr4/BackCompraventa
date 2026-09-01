@@ -1,18 +1,26 @@
 # Guía de Continuidad y Configuración del Proyecto
 
-## 1. Estado Actual: ¿Qué falta construir?
+## 1. Estado actual (septiembre 2026)
 
-Hemos actualizado el archivo principal `ANALISIS_INTEGRAL_COMPRAVENTA.md`. Las tareas de refactorización estructural, errores de compilación y convenciones que corregimos ya están subrayadas/tachadas como **✅ COMPLETADO**.
+Los módulos de dominio **ya están construidos y el proyecto compila**. La guía anterior (Employee vacío, Auth pendiente, Articles/Pawns/Sales por hacer) quedó desactualizada.
 
-**Lo que falta construir para poder operar el backend (Siguientes Pasos Críticos):**
+| Área | Estado |
+|---|---|
+| Infraestructura (Config, Security, Audit, Exception, Shared) | ✅ Completo |
+| Auth + Employee + Clients + Articles | ✅ Completo |
+| Pawns + Sales + **Purchases** | ✅ Completo |
+| Flyway | ✅ `V1__schema_completo.sql`, `V2__seed_admin.sql`, `V3__align_base_entity_columns.sql` |
+| Motor Sync | ⚠️ Solo entidad/tabla `sync_outbox` — falta el servicio |
+| Tests | ❌ Stubs de Initializr |
+| Dashboard | ❌ No implementado |
 
-*   **`Employee` Entity + Flyway:** Crear la entidad principal de empleado, su repositorio y los scripts iniciales de migración de Flyway para crear la estructura real en la base de datos.
-*   **Servicios de Seguridad Core:**
-    *   Implementar `UserDetailsServiceImpl` (que en este momento está vacío y causará un error en ejecución).
-    *   Desarrollar el `SecurityContextHelper` para acceder al usuario autenticado.
-    *   Construir el `AuthController` y `AuthServiceImpl` (endpoints de `/login` y `/register`).
-*   **Módulos de Negocio Restantes:** Empezar con el desarrollo de Articles, Clients, Pawns (Empeños) y Sales.
-*   **Servicio de Sincronización:** Construir la lógica offline (`SyncService` y `SyncScheduler`).
+**Siguiente trabajo de producto (no bloquea operar compras/ventas/empeños en local):**
+- `SyncEngineService` + scheduler contra Supabase
+- Tests unitarios/integración
+- Endpoint de dashboard/KPIs (opcional)
+
+Detalle de Purchases: ver `PROMPT_MODULO_PURCHASES.md`.  
+Análisis de avance: `INFORME_ANALISIS_COMPRAVENTA.md`.
 
 ---
 
@@ -35,6 +43,7 @@ En tu proyecto ya cuentas con un archivo `docker-compose.yml`. Sigue estos pasos
    ```powershell
    docker-compose up -d
    ```
+   Si el archivo está dentro de `Backend/`, usa `Docker-Compose.yml` desde esa carpeta.
 4. Para validar que todo funciona correctamente, ejecuta:
    ```powershell
    docker ps
@@ -52,23 +61,18 @@ Para el día a día, es mejor ejecutar la base de datos en Docker y el código J
    .\mvnw.cmd spring-boot:run
    ```
    *Tu servidor Spring Boot se levantará y se conectará automáticamente al PostgreSQL de tu contenedor Docker.*
+   *Swagger: `http://localhost:8080/api/swagger-ui.html` (context-path `/api`).*
 
 ---
 
-## 3. Hoja de Ruta Inmediata (Próximos Pasos de Trabajo)
+## 3. Hoja de ruta (lo que queda)
 
-Una vez que tengas Docker configurado y Java 21 listo, este es el orden de acciones a seguir para programar lo que falta:
+### Ya hecho
+- Schema Flyway + seed admin
+- JWT, `UserDetailsServiceImpl`, `AuthController` (`/auth/login`, `/auth/refresh`)
+- Módulos: Employees, Clients, Articles, Pawns, Sales, Purchases
 
-### 🎯 Paso 1: Configurar Migraciones y Entidades (Flyway)
-- Crear el archivo `V1__init_schema.sql` en `src/main/resources/db/migration/`.
-- Crear la tabla `employee` y la tabla `audit_log` en SQL puro.
-- Implementar la clase `@Entity` de `Employee.java`.
-
-### 🎯 Paso 2: Conectar la Seguridad
-- Completar `UserDetailsServiceImpl` para que busque el `Employee` desde la base de datos (inyección del repositorio de empleados).
-- Asegurarse de que el Filtro JWT esté validando tokens contra la entidad Employee.
-
-### 🎯 Paso 3: Endpoints de Acceso y Validación
-- Crear `AuthController` exponiendo la autenticación.
-- Usar Postman o el entorno Swagger (`http://localhost:8080/swagger-ui.html`) integrado para pedir un Token.
-- Realizar pruebas verificando que el log de auditoría se guarda correctamente al realizar acciones con un token válido.
+### Pendiente
+1. Motor de sincronización (`SyncOutboxRepository`, `SyncEngineService`, trigger Admin).
+2. Tests (JUnit 5 + Mockito; Auth e inventario como prioridad).
+3. Dashboard de métricas (opcional).

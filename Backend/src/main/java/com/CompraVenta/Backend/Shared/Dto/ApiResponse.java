@@ -35,6 +35,12 @@ public class ApiResponse<T> {
                 .message(message)
                 .build();
     }
+    public static <T> ApiResponse<T> success(T data) {
+        return ok(data);
+    }
+    public static <T> ApiResponse<T> success(T data, String message) {
+        return ok(data, message);
+    }
     public static <T> ApiResponse<T> created(T data) {
         return ApiResponse.<T>builder()
                 .success(true)

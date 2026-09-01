@@ -1,5 +1,7 @@
 # 📋 INFORME TÉCNICO INTEGRAL — Sistema CompraVenta Backend
-**Versión:** 1.0.0 | **Fecha:** 2026-05-26 | **Clasificación:** Confidencial — Uso interno
+**Versión:** 1.1.0 | **Fecha original:** 2026-05-26 | **Actualizado:** 2026-09-01 | **Clasificación:** Confidencial — Uso interno
+
+> **Estado actual (septiembre 2026):** Auth, Employee, Clients, Articles, Pawns, Sales y Purchases están implementados. Compilación Maven OK. Docker/JWT/Audit/excepciones operativos. **Pendiente:** motor Sync (solo tabla), tests, Dashboard. El diagnóstico de mayo (módulos vacíos, UserDetails vacío, Dockerfile `top -b`) **ya no describe el repo**. Detalle vigente: `INFORME_ANALISIS_COMPRAVENTA.md`.
 
 ---
 
@@ -35,14 +37,14 @@ El proyecto **CompraVenta** es un sistema híbrido de gestión para casas de emp
 |---|---|---|
 | Infraestructura Spring Boot | ✅ Sólida | — |
 | Seguridad JWT | ✅ Correcta | — |
-| Módulos de negocio (vacíos) | 🔴 Incompletos | CRÍTICO |
-| Excepciones personalizadas | 🟠 Parciales | ALTO |
-| AuditAspect, UserDetailsServiceImpl | 🔴 Sin implementar | CRÍTICO |
-| Docker / Containerización | 🔴 Insuficiente | CRÍTICO |
-| ResourceNotFoundException | 🔴 Vacía | CRÍTICO |
+| Módulos de negocio | ✅ Auth, Employee, Clients, Articles, Pawns, Sales, Purchases | — |
+| Excepciones personalizadas | ✅ Completas | — |
+| AuditAspect, UserDetailsServiceImpl | ✅ Implementados | — |
+| Docker / Containerización | ✅ Compose + Dockerfile | — |
+| ResourceNotFoundException | ✅ Completa | — |
 | Tests unitarios | 🔴 Ausentes | ALTO |
 | Documentación API (OpenAPI) | ✅ Configurada | — |
-| Sincronización Offline | 🟡 Entidad definida | MEDIO |
+| Sincronización Offline | 🟡 Entidad/tabla; falta servicio | MEDIO |
 
 ---
 
@@ -91,6 +93,9 @@ El proyecto **CompraVenta** es un sistema híbrido de gestión para casas de emp
 │  │ AuthModule  │ │ Articles │ │   Pawns    │ │Sales │ │ Clients  │  │
 │  │  /auth/**   │ │/articles │ │  /pawns    │ │/sales│ │/clients  │  │
 │  └─────────────┘ └──────────┘ └────────────┘ └──────┘ └──────────┘  │
+│  ┌─────────────┐ ┌──────────┐                                          │
+│  │  Employees  │ │Purchases │  ← implementados 2026                    │
+│  │ /employees  │ │/purchases│                                          │
 │                                                                        │
 │  ┌──────────────────────────────────────────────────────────────────┐ │
 │  │              INFRAESTRUCTURA TRANSVERSAL                         │ │
@@ -329,14 +334,15 @@ public enum Role {
 
 ### 3.4 Inventario de módulos de negocio faltantes
 
-Los siguientes módulos están referenciados en la documentación OpenAPI pero **no tienen implementación**:
+Los siguientes módulos están en el código (septiembre 2026). Dashboard sigue sin implementar.
 
 | Módulo | Controller | Service | Repository | Entity | DTO |
 |---|---|---|---|---|---|
 | Auth | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Articles | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Pawns (Empeños) | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Sales | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Pawns (Empeños) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Sales | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Purchases | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Clients | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Employees | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Dashboard | ❌ | ❌ | — | — | ❌ |
@@ -1613,12 +1619,12 @@ Operación local → Guardar en PostgreSQL local → Agregar a sync_outbox (PEND
 | # | Tarea | Prioridad |
 |---|---|---|
 | 1 | ~~Corregir `ResourceNotFoundException` (extends RuntimeException)~~ | ✅ COMPLETADO |
-| 2 | **Implementar `UserDetailsServiceImpl` con Employee entity** | 🔴 Crítico |
+| 2 | ~~Implementar `UserDetailsServiceImpl` con Employee entity~~ | ✅ COMPLETADO |
 | 3 | ~~Implementar `AuditRepository` e `AuditAspect`~~ | ✅ COMPLETADO |
 | 4 | ~~Corregir typo `@Value("${cors.allowed-methods")`~~ | ✅ COMPLETADO |
 | 5 | ~~Implementar `CustomUserDetails`~~ | ✅ COMPLETADO |
-| 6 | **Crear `Employee` entity + repository + migration Flyway** | 🔴 Crítico |
-| 7 | **Crear `AuthController` + `AuthServiceImpl`** | 🔴 Crítico |
+| 6 | ~~Crear `Employee` entity + repository + migration Flyway~~ | ✅ COMPLETADO |
+| 7 | ~~Crear `AuthController` + `AuthServiceImpl`~~ | ✅ COMPLETADO |
 | 8 | ~~Corregir `ApiResponse.ErrorDetail` vs `ErrorDetail` externo~~ | ✅ COMPLETADO |
 
 ### Sprint 2 — Estabilización (2-3 semanas)
@@ -1626,22 +1632,23 @@ Operación local → Guardar en PostgreSQL local → Agregar a sync_outbox (PEND
 | # | Tarea | Prioridad |
 |---|---|---|
 | 9 | ~~Renombrar clases con typos (DateSorceConfig, etc.)~~ | ✅ COMPLETADO |
-| 10 | **Implementar `SecurityContextHelper`** | 🟠 Alto |
+| 10 | ~~Implementar `SecurityContext` (helper de usuario autenticado)~~ | ✅ COMPLETADO |
 | 11 | ~~Corrección columna `"delete"` → `"is_deleted"` en BaseEntity~~ | ✅ COMPLETADO |
 | 12 | ~~Unificar métodos `generateAccesoToken`/`generateAccessoToken`~~ | ✅ COMPLETADO |
 | 13 | ~~Corregir Role enum a UPPER_CASE~~ | ✅ COMPLETADO |
-| 14 | **Implementar `SyncService` + `SyncScheduler`** | 🟠 Alto |
+| 14 | **Implementar `SyncService` + `SyncScheduler`** | 🟠 Alto — **sigue pendiente** |
 | 15 | ~~Crear Dockerfile y docker-compose optimizados~~ | ✅ COMPLETADO |
 
 ### Sprint 3 — Módulos de negocio (3-4 semanas)
 
 | # | Módulo | HUs relacionadas |
 |---|---|---|
-| 16 | Módulo Articles (CRUD completo) | HU-ART-01 a HU-ART-05 |
-| 17 | Módulo Clients | HU-CLI-01 a HU-CLI-03 |
-| 18 | Módulo Pawns (Empeños) | HU-PAW-01 a HU-PAW-06 |
-| 19 | Módulo Sales | HU-SAL-01 a HU-SAL-04 |
-| 20 | Dashboard/Reportes | HU-DASH-01 a HU-DASH-03 |
+| 16 | ~~Módulo Articles (CRUD completo)~~ | ✅ HU-ART-01 a HU-ART-05 |
+| 17 | ~~Módulo Clients~~ | ✅ HU-CLI-01 |
+| 18 | ~~Módulo Pawns (Empeños)~~ | ✅ HU-PAW-01 a HU-PAW-07 |
+| 19 | ~~Módulo Sales~~ | ✅ HU-SAL-01 a HU-SAL-03 |
+| 19b | ~~Módulo Purchases~~ | ✅ HU-PUR-01 |
+| 20 | Dashboard/Reportes | HU-DASH-01 a HU-DASH-03 — pendiente |
 
 ### Sprint 4 — Calidad y producción (2 semanas)
 
@@ -1661,7 +1668,7 @@ Operación local → Guardar en PostgreSQL local → Agregar a sync_outbox (PEND
 | Archivo | Tipo | Descripción del problema |
 |---|---|---|
 | `ResourceNotFoundException.java` | ✅ COMPLETADO | ~~No extiende `RuntimeException`~~ |
-| `UserDetailsServiceImpl.java` | 🔴 CRÍTICO | **Clase vacía — Spring Security falla en runtime** |
+| `UserDetailsServiceImpl.java` | ✅ COMPLETADO | ~~Clase vacía — Spring Security falla en runtime~~ |
 | `AudiAspect.java` | ✅ COMPLETADO | ~~Aspecto vacío — `@Auditable` es inerte~~ |
 | `AuditRepository.java` | ✅ COMPLETADO | ~~No es `JpaRepository` — no puede inyectarse~~ |
 | `CustomUserDetails.java` | ✅ COMPLETADO | ~~Vacío — `JwtFilter` no puede construir UserDetails~~ |
@@ -1679,5 +1686,5 @@ Operación local → Guardar en PostgreSQL local → Agregar a sync_outbox (PEND
 
 ---
 
-*Documento generado el 2026-05-26 | Equipo de Ingeniería — CompraVenta*
-*Próxima revisión recomendada: Al completar Sprint 1*
+*Documento generado el 2026-05-26 | Actualizado 2026-09-01 (módulos de dominio completos, Purchases incluido)*
+*Siguiente foco: Sync Engine y tests*

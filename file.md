@@ -1,5 +1,7 @@
 # Informe de Auditoría Técnica — CompraVenta Backend
-**Fecha:** Junio 2026 | **Stack:** Java 21 · Spring Boot 3.4.5 · PostgreSQL 16 · Redis · Flyway
+**Fecha original:** Junio 2026 | **Actualizado:** Septiembre 2026 | **Stack:** Java 21 · Spring Boot 3.4.5 · PostgreSQL 16 · Redis · Flyway
+
+> **Estado 2026-09:** Los bugs de Clientes listados abajo se aplicaron en el código. Auth, Employee, Clients, Articles, Pawns, Sales y **Purchases** están construidos. Compilación Maven OK. Pendiente: Sync Engine y tests. Ver `INFORME_ANALISIS_COMPRAVENTA.md` y `PROMPT_MODULO_PURCHASES.md`.
 
 ---
 
@@ -13,7 +15,7 @@
 | Seguridad | JwtAuthenticationFilter, JwtService, CustomUserDetails, UserDetailsServiceImpl, SecurityContext |
 | Infraestructura | BaseEntity, ApiResponse, PageResponse, ErrorDetail, GlobalExceptionHandler |
 | Configuración | SecurityConfig, RedisConfig, JacksonConfig, CorsConfig, SchedulingConfig, application.yml |
-| Base de datos | V1__initial_schema.sql, V2__add_sync_triggers.sql, V3__seed_default_admin.sql, V4__add_missing.sql |
+| Base de datos | `V1__schema_completo.sql`, `V2__seed_admin.sql`, `V3__align_base_entity_columns.sql` |
 | Auditoría | AuditAspect, AuditLog, AuditRepository, @Auditable |
 | Sync | SyncOutbox, SyncStatus |
 
@@ -29,7 +31,7 @@
 - **ApiResponse / PageResponse**: wrappers genéricos bien diseñados, usados consistentemente en Employee y Auth.
 - **SecurityConfig**: JWT stateless, @EnableMethodSecurity, endpoints públicos correctamente declarados.
 - **JwtAuthenticationFilter**: verifica blacklist en Redis antes de autenticar, degradación si Redis no disponible.
-- **Flyway migrations**: V1 crea todo el schema, V2 agrega triggers de sync y SP register_sale, V3 seed admin, V4 índices adicionales.
+- **Flyway migrations**: V1 schema completo (incluye `purchases`, SP `register_sale`, triggers sync), V2 seed admin, V3 columnas `is_deleted`/`updated_at` para alinear `BaseEntity`.
 - **SchedulingConfig**: ThreadPoolTaskScheduler separado del thread principal, no bloquea HTTP.
 - **Docker Compose**: stack completo con health checks, PostgreSQL 16, Redis, pgAdmin.
 - **AuditAspect**: captura before/after, IP, employeeId con AOP — no contamina lógica de negocio.
@@ -227,23 +229,18 @@ También corregir `createAt`/`updateAt` → `createdAt`/`updatedAt` para coincid
 
 ## 5. Próximos Pasos Sugeridos
 
-### Inmediato (antes de intentar levantar la app)
-1. Aplicar los 7 archivos corregidos del módulo Clientes
-2. Eliminar `Exception/handler/GlobalExceptionHandler.java` (duplicado)
-3. Agregar `V5__fix_cliente_status_default.sql` a las migraciones
-4. Verificar que la app arranca con `./mvnw spring-boot:run`
+### Hecho (septiembre 2026)
+1. Módulo Clientes y correcciones BUG-01 a BUG-18 aplicadas en código.
+2. `GlobalExceptionHandler` unificado en `Exception/handler/`.
+3. Módulos **Articles**, **Pawns**, **Sales** y **Purchases** implementados.
+4. Compilación Maven con procesador Lombok; Purchases con controller y transacción completa.
 
-### Corto plazo (próximo módulo)
-5. Implementar módulo **Articles** (siguiente en la secuencia de dominio)
-6. Renombrar paquete `Emus` → `Enums` como parte del scaffolding del módulo Articles
-7. Corregir `@Size` en DTOs de clientes (max=100 en firstName/lastName)
+### Corto plazo
+5. Motor Sync (`SyncEngineService` + scheduler) — la tabla `sync_outbox` ya recibe cambios por trigger.
+6. Tests de `PurchaseServiceImpl`, `ClienteServiceImpl` y `AuthServiceImpl`.
+7. Renombrar `Application.yml` → `application.yml` si se despliega en Linux.
 
 ### Mediano plazo
-8. Módulos **Pawns**, **Sales**, **Purchases** siguiendo el mismo patrón
-9. Implementar `SyncEngineService` con el `@Scheduled` y el cliente HTTP de Supabase
-10. Implementar Dashboard endpoint con métricas KPI
-11. Tests unitarios para `ClienteServiceImpl` y `AuthenticationServiceImpl`
-
-### Arquitectura futura
-12. Mover `SyncOutbox`/`SyncStatus` a subpaquetes adecuados
-13. Considerar renombrar `Employee.rol` → `Employee.role` en una iteración dedicada de refactoring
+8. Dashboard KPI.
+9. Mover `SyncOutbox`/`SyncStatus` a subpaquetes.
+10. Valorar `Employee.rol` → `role` en un refactor dedicado.
