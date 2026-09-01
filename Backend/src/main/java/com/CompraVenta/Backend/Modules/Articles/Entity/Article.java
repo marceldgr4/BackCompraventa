@@ -31,7 +31,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class Article extends BaseEntity {
 
-    @Column(name = "cliente_id", nullable = false)
+    @Column(name = "cliente_id")
     private Long clienteId;
 
     @Column(name = "name_article",nullable = false,length = 255)

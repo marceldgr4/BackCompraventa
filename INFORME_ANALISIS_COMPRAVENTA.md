@@ -2,6 +2,7 @@
 ## Spring Boot 3.4.5 · Java 21 · PostgreSQL 16 · Redis
 
 > **Generado:** Junio 2026  
+> **Actualizado:** Septiembre 2026 — módulo Purchases implementado; el proyecto compila  
 > **Revisado por:** Análisis estático exhaustivo del repositorio  
 > **Alcance:** Código fuente, documentación, migraciones, configuración, historias de usuario y requisitos
 
@@ -20,28 +21,28 @@
 | Módulo Articles           | 100%   |
 | Módulo Pawns              | 100%   |
 | Módulo Sales              | 100%   |
-| Módulo Purchases          | 0%     |
+| Módulo Purchases          | 100%   |
 | Motor Sync                | 15%    |
 | Tests                     | 5%     |
-| **TOTAL GLOBAL**          | **~85%** |
+| **TOTAL GLOBAL**          | **~92%** |
 
 ### Resumen Ejecutivo
 
-El proyecto tiene una **base de infraestructura sólida y bien construida**. Los módulos transversales (Config, Security, Audit, Exception, Shared) están completos y con calidad alta. Los módulos Auth, Employee y Clients están implementados con buenas prácticas y lógica de negocio correcta.
+El proyecto tiene una **base de infraestructura sólida y bien construida**. Los módulos transversales (Config, Security, Audit, Exception, Shared) están completos. Auth, Employee, Clients, Articles, Pawns, Sales y **Purchases** están implementados.
 
-Sin embargo, **1 de los 7 módulos de dominio principal está ausente**: Purchases. El motor de sincronización offline solo tiene la entidad `SyncOutbox` sin ningún servicio operacional. Los tests prácticamente no existen más allá de los stubs generados por Spring Initializr.
+El motor de sincronización offline solo tiene la entidad `SyncOutbox` sin servicio operacional. Los tests prácticamente no existen más allá de los stubs de Spring Initializr.
 
-El proyecto está **listo para continuar el desarrollo** sobre una base limpia. No hay deudas técnicas críticas pendientes en los módulos ya implementados (los bugs previamente detectados en versiones anteriores han sido corregidos según las memorias del proyecto).
+Los bugs que impedían compilar Purchases (servicio incompleto, sin controlador, Lombok en Maven, `@Auditable` en Pawns) están corregidos. La app queda lista para operar dominio en local; lo pendiente es Sync y tests.
 
 ### Nivel de Preparación para Continuar
 
 ✅ Infraestructura lista  
 ✅ Seguridad JWT operacional  
-✅ Patrones de referencia establecidos (Employee y Articles como módulos base)  
-✅ Migraciones de BD completas para todas las tablas  
-⚠️ Motor sync incompleto (no bloquea el desarrollo de módulos de dominio)  
+✅ Patrones de referencia establecidos (Employee, Articles, Sale, Purchases)  
+✅ Migraciones de BD: V1 schema, V2 seed admin, V3 columnas `BaseEntity`  
+⚠️ Motor sync incompleto (no bloquea compras/ventas/empeños)  
 ❌ Sin tests unitarios ni de integración reales  
-❌ 1 módulo de negocio core ausente  
+✅ Los 7 módulos de dominio core están presentes  
 
 ---
 
@@ -305,15 +306,38 @@ El proyecto está **listo para continuar el desarrollo** sobre una base limpia. 
 
 ### 🛒 Módulo: Purchases (Compras)
 
-**Estado: ❌ NO IMPLEMENTADO (0%)**
+**Estado: ✅ 100% COMPLETO**
 
-**HUs pendientes:** HU-PUR-01
+**HUs cubiertas:** HU-PUR-01 ✅
 
-No existe ningún archivo en `Modules/Purchases/`. La tabla `purchases` está en la migración.
+| Componente | Estado |
+|---|---|
+| `PurchaseController` | ✅ |
+| `PurchaseService` / `PurchaseServiceImpl` | ✅ |
+| `PurchaseRepository` | ✅ |
+| `Purchase` entity (sin `BaseEntity`) | ✅ |
+| `PurchaseMapper` | ✅ |
+| DTOs (`CreatePurchaseRequest`, `PurchaseItemRequest`, `PurchaseResponse`) | ✅ |
+| Auxiliares (`ArticleCreationService`, `ClienteResolutionService`, `EmployeeContextService`) | ✅ |
 
-**Dependencias necesarias:**
-- Módulo Articles (crea artículo al registrar compra)
-- Módulo Clients (opcional, para asociar proveedor)
+**Funcionalidades implementadas:**
+- Registro de compra en una transacción: empleado autenticado, cliente existente / RAPIDO / anónimo.
+- Un ítem del request = un `Article` (`SourceType.COMPRA`) + una fila en `purchases`.
+- WARN si `purchasePrice >= salePrice` (no bloquea).
+- Listado paginado; EMPLEADO ve las propias, ADMIN todas.
+- Anulación física (ADMIN) y borrado del artículo si no tiene ventas ni empeños.
+- `@Auditable` en create/delete.
+
+**Dependencias:**
+- Módulo Articles (crea inventario al comprar).
+- Módulo Clients (opcional, proveedor).
+
+**Correcciones al cerrar el módulo (septiembre 2026):**
+- Servicio incompleto + typo `findByGloabalId`; se completó e inyectaron los auxiliares.
+- Se añadió `PurchaseController`.
+- Entidad: Lombok `@AllArgsConstructor`, índice `purchase_date`.
+- `V3__align_base_entity_columns.sql` para que Hibernate valide `is_deleted`/`updated_at`.
+- Procesador Lombok en Maven; `@Auditable(operation)` y `SourceType.EMPEÑO` en Pawns; alias `ApiResponse.success`.
 
 ---
 
@@ -376,7 +400,7 @@ La tabla `sync_outbox` existe en BD con triggers que capturan cambios automátic
 | HU-SAL-01 | Registrar venta | ✅ Completo | Usa SP `register_sale()` |
 | HU-SAL-02 | Filtrar ventas | ✅ Completo | |
 | HU-SAL-03 | Eliminar venta (Admin) | ✅ Completo | Soft delete y rollback de stock |
-| HU-PUR-01 | Registrar compra | ❌ Pendiente | |
+| HU-PUR-01 | Registrar compra | ✅ Completo | Crea artículos + N filas `purchases`; anulación ADMIN |
 | HU-CLI-01 | CRUD clientes | ✅ Completo | Soft delete abierto, search incluye phone |
 | HU-EMP-01 | Gestión empleados (Admin) | ✅ Completo | |
 | HU-EMP-02 | Actualizar propio perfil | ✅ Completo | |
@@ -397,7 +421,7 @@ La tabla `sync_outbox` existe en BD con triggers que capturan cambios automátic
 | RF-02.1..8 | Módulo Articles | ✅ Completo |
 | RF-03.1..10 | Módulo Pawns | ✅ Completo |
 | RF-04.1..7 | Módulo Sales | ✅ Completo |
-| RF-05.1..5 | Módulo Purchases | ❌ Pendiente |
+| RF-05.1..5 | Módulo Purchases | ✅ Completo |
 | RF-06.1 | Tipos COMPLETO/RAPIDO | ✅ |
 | RF-06.2 | Promover RAPIDO → COMPLETO | ✅ |
 | RF-06.3 | Unicidad cédula y teléfono | ✅ |
@@ -527,43 +551,17 @@ Si esta variable de entorno no está seteada y el sync está habilitado, el cont
 
 ```
 Articles → Pawns → Sales → Purchases → Sync Engine → Tests
+     ✅         ✅       ✅         ✅           ⚠️          ❌
 ```
 
-**¿Por qué Articles primero?**
-- Es la entidad central del sistema. Pawns, Sales y Purchases tienen FK hacia `articles`.
-- Sin Articles no se pueden probar ninguno de los otros módulos de dominio.
-- El patrón `Employee` como referencia está listo para replicar.
-- La tabla y todos los tipos enum ya existen en BD.
-
-**¿Por qué Pawns segundo?**
-- Es el módulo más complejo y el corazón del negocio de empeño.
-- Depende de Articles y Clients (ambos listos).
-- Tiene la lógica más crítica: transacciones atómicas, estados de máquina, expiración automática.
-- Requiere la mayor atención de diseño.
-
-**¿Por qué Sales tercero?**
-- Depende de Articles.
-- El stored procedure `register_sale()` ya está implementado en BD.
-- Es una de las operaciones más frecuentes del negocio.
-
-**¿Por qué Purchases cuarto?**
-- Depende de Articles y opcionalmente de Clients.
-- Es más simple que Pawns y Sales.
-
-**¿Por qué Sync Engine después de módulos de dominio?**
-- Los triggers de BD ya capturan cambios desde el momento 0.
-- El sync no es bloqueante para el desarrollo de módulos.
-- Implementarlo después permite entender mejor qué entidades necesitan sincronizarse.
-
-**¿Por qué Tests al final?**
-- El proyecto ya tiene patrones establecidos. Con los módulos completos, los tests pueden hacerse de forma más estratégica.
-- Sin embargo, **se recomienda escribir tests de Articles en paralelo** para establecer el patrón.
+**Fases 1–4 (Articles, Pawns, Sales, Purchases): completadas.**  
+Siguiente trabajo: Sync Engine y tests. Purchases ya no es el cuello de botella.
 
 ---
 
 ## 7. Plan de Trabajo Inmediato
 
-### Fase 0 — Correcciones Previas (1-2 horas)
+### Fase 0 — Correcciones Previas (✅ COMPLETADA)
 
 **Tarea 0.1 — Corregir bug de autorización en ClienteController**
 ```java
@@ -587,7 +585,7 @@ public ResponseEntity<Void> delete(@PathVariable UUID globalId) { ... }
 
 ---
 
-### Fase 1 — Módulo Articles (estimado: 3-4 horas)
+### Fase 1 — Módulo Articles (✅ COMPLETADA)
 
 **Patrón a seguir:** Employee module como referencia canónica.
 
@@ -667,7 +665,7 @@ DELETE /articles/{globalId}     → @PreAuthorize Admin
 
 ---
 
-### Fase 2 — Módulo Pawns (estimado: 6-8 horas)
+### Fase 2 — Módulo Pawns (✅ COMPLETADA)
 
 > Este es el módulo más complejo. Requiere Phase 1 completa.
 
@@ -717,14 +715,9 @@ public void expireOverduePawns() {
 
 ---
 
-### Fase 4 — Módulo Purchases (estimado: 2-3 horas)
+### Fase 4 — Módulo Purchases (✅ COMPLETADA)
 
-> Requiere Phases 1 completa.
-
-**Tarea 4.1 — Entity, Service, Controller**
-Patrón idéntico a Sales pero más simple:
-- Transacción: opcionalmente crea/usa cliente + crea artículo + registra compra
-- Alerta si `purchasePrice >= price` (pero no bloquea)
+> Compras implementadas: cliente opcional/RAPIDO/anónimo, alta de artículos `COMPRA`, una fila `purchases` por ítem, WARN de margen, anulación física ADMIN. Ver `PROMPT_MODULO_PURCHASES.md`.
 
 ---
 
@@ -782,13 +775,13 @@ class AuthControllerIT {
 
 | Aspecto | Estado | Acción |
 |---|---|---|
-| Base lista para producción | ✅ Auth + Employee + Clients + Articles + Pawns + Sales | Puede demostrarse ya |
-| Próximo módulo crítico | ❌ Purchases (Compras) | Implementar inmediatamente |
-| Bug bloqueante activo | ⚠️ Permisos soft delete | Corregir en 5 minutos |
-| Riesgo mayor | ❌ Sin tests | Agregar en paralelo con los nuevos módulos |
-| BD completamente lista | ✅ V1 + V2 | Sin migraciones pendientes |
-| Motor sync | ⚠️ Tabla lista, sin servicio | No urgente hasta tener módulos de dominio |
+| Base lista para producción | ✅ Auth + Employee + Clients + Articles + Pawns + Sales + Purchases | Puede demostrarse el flujo de negocio |
+| Próximo módulo crítico | ⚠️ Motor Sync | Implementar procesador de `sync_outbox` |
+| Bug bloqueante activo | ✅ Compilación Maven OK | Lombok processor + Purchases/Pawns corregidos |
+| Riesgo mayor | ❌ Sin tests | Agregar en paralelo con Sync |
+| BD | ✅ V1 + V2 + V3 | V3 alinea columnas de `BaseEntity` |
+| Motor sync | ⚠️ Tabla lista, sin servicio | Pendiente; no bloquea dominio |
 
 ---
 
-*Informe generado con base en revisión estática del repositorio — Junio 2026*
+*Informe generado con base en revisión estática del repositorio — Junio 2026; actualizado septiembre 2026 (Purchases completo).*
