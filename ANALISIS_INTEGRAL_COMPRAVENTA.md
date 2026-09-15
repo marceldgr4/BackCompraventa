@@ -1,7 +1,7 @@
 # 📋 INFORME TÉCNICO INTEGRAL — Sistema CompraVenta Backend
-**Versión:** 1.1.0 | **Fecha original:** 2026-05-26 | **Actualizado:** 2026-09-01 | **Clasificación:** Confidencial — Uso interno
+**Versión:** 1.2.0 | **Fecha original:** 2026-05-26 | **Actualizado:** 2026-09-15 | **Clasificación:** Confidencial — Uso interno
 
-> **Estado actual (septiembre 2026):** Auth, Employee, Clients, Articles, Pawns, Sales y Purchases están implementados. Compilación Maven OK. Docker/JWT/Audit/excepciones operativos. **Pendiente:** motor Sync (solo tabla), tests, Dashboard. El diagnóstico de mayo (módulos vacíos, UserDetails vacío, Dockerfile `top -b`) **ya no describe el repo**. Detalle vigente: `INFORME_ANALISIS_COMPRAVENTA.md`.
+> **Estado actual (15 septiembre 2026):** Auth, Employee, Clients, Articles, Pawns, Sales, Purchases y **Sync MVP** están implementados. Compilación Maven OK. YAML/Compose en lowercase. JWT validado al arranque. **Pendiente:** tests de integración, Dashboard, download remoto Supabase. El diagnóstico de mayo (módulos vacíos, UserDetails vacío, Dockerfile `top -b`) **ya no describe el repo**. Detalle vigente: `INFORME_ANALISIS_COMPRAVENTA.md`.
 
 ---
 
@@ -42,9 +42,9 @@ El proyecto **CompraVenta** es un sistema híbrido de gestión para casas de emp
 | AuditAspect, UserDetailsServiceImpl | ✅ Implementados | — |
 | Docker / Containerización | ✅ Compose + Dockerfile | — |
 | ResourceNotFoundException | ✅ Completa | — |
-| Tests unitarios | 🔴 Ausentes | ALTO |
+| Tests unitarios | 🟡 Parcial (Clients + Sync) | MEDIO |
 | Documentación API (OpenAPI) | ✅ Configurada | — |
-| Sincronización Offline | 🟡 Entidad/tabla; falta servicio | MEDIO |
+| Sincronización Offline | ✅ MVP upload outbox | — |
 
 ---
 
@@ -65,7 +65,7 @@ El proyecto **CompraVenta** es un sistema híbrido de gestión para casas de emp
 │  ┌────────────────────────────────────────────────────────────┐  │
 │  │                    Capas de Negocio                        │  │
 │  │  Controller → Service → Repository → Entity               │  │
-│  │  [INCOMPLETAS — solo infraestructura existe]               │  │
+│  │  [Dominio implementado: Auth…Purchases + Sync MVP]        │  │
 │  └────────────────────────────────────────────────────────────┘  │
 │  ┌──────────────┐  ┌───────────────┐  ┌────────────────────────┐ │
 │  │  Redis Cache │  │  PostgreSQL   │  │  Supabase (Sync)        │ │
@@ -1463,7 +1463,7 @@ Backend/
 │   │   │   ├── 📁 Config/                   ← Configuración técnica
 │   │   │   │   ├── CorsConfig.java          ← CORREGIR typo @Value
 │   │   │   │   ├── DataSourceConfig.java    ← RENOMBRAR DateSorceConfig
-│   │   │   │   ├── JacksonConfig.java       ← RENOMBRAR JackSonConfig
+│   │   │   │   ├── JacksonConfig.java       ← ✅ (antes JackSonConfig)
 │   │   │   │   ├── OpenApiConfig.java
 │   │   │   │   ├── RedisConfig.java         ← CORREGIR parámetro no usado
 │   │   │   │   └── SchedulingConfig.java
@@ -1494,10 +1494,12 @@ Backend/
 │   │   │   │   └── enums/Role.java          ← CORREGIR Admin→ADMIN, Empleado→EMPLEADO
 │   │   │   │
 │   │   │   ├── 📁 Sync/                     ← Motor de sincronización offline
-│   │   │   │   ├── SyncOutbox.java          ← CORREGIR "paypload" → "payload"
+│   │   │   │   ├── SyncOutbox.java
 │   │   │   │   ├── SyncStatus.java
-│   │   │   │   ├── service/SyncService.java          ← IMPLEMENTAR
-│   │   │   │   └── scheduler/SyncScheduler.java      ← IMPLEMENTAR
+│   │   │   │   ├── Repository/SyncOutboxRepository.java  ← ✅
+│   │   │   │   ├── service/SyncEngineService.java        ← ✅ MVP
+│   │   │   │   ├── client/SupabaseSyncClient.java        ← ✅
+│   │   │   │   └── Controller/SyncController.java        ← ✅
 │   │   │   │
 │   │   │   ├── 📁 Auth/                     ← Módulo de autenticación (NUEVO)
 │   │   │   │   ├── controller/AuthController.java
@@ -1540,7 +1542,7 @@ Backend/
 │       └── java/com/CompraVenta/Backend/
 │           ├── Auth/AuthControllerTest.java
 │           ├── Security/JwtServiceTest.java
-│           └── Sync/SyncServiceTest.java
+│           └── Sync/service/SyncEngineServiceTest.java
 │
 ├── nginx/
 │   └── nginx.conf                          ← Config de proxy inverso
@@ -1636,7 +1638,7 @@ Operación local → Guardar en PostgreSQL local → Agregar a sync_outbox (PEND
 | 11 | ~~Corrección columna `"delete"` → `"is_deleted"` en BaseEntity~~ | ✅ COMPLETADO |
 | 12 | ~~Unificar métodos `generateAccesoToken`/`generateAccessoToken`~~ | ✅ COMPLETADO |
 | 13 | ~~Corregir Role enum a UPPER_CASE~~ | ✅ COMPLETADO |
-| 14 | **Implementar `SyncService` + `SyncScheduler`** | 🟠 Alto — **sigue pendiente** |
+| 14 | ~~Implementar `SyncService` + `SyncScheduler`~~ | ✅ COMPLETADO (MVP upload; falta download) |
 | 15 | ~~Crear Dockerfile y docker-compose optimizados~~ | ✅ COMPLETADO |
 
 ### Sprint 3 — Módulos de negocio (3-4 semanas)
@@ -1654,7 +1656,7 @@ Operación local → Guardar en PostgreSQL local → Agregar a sync_outbox (PEND
 
 | # | Tarea |
 |---|---|
-| 21 | Tests unitarios con JUnit 5 + Mockito (cobertura mínima 70%) |
+| 21 | Tests unitarios JUnit 5 + Mockito | 🟡 Parcial (`ClienteServiceImplTest`, `SyncEngineServiceTest`) — falta cobertura 70% |
 | 22 | Tests de integración con Testcontainers |
 | 23 | Rate limiting con Bucket4j |
 | 24 | Security headers HTTP |
@@ -1683,8 +1685,10 @@ Operación local → Guardar en PostgreSQL local → Agregar a sync_outbox (PEND
 | `GlobalEceptionHandler.java` | ✅ COMPLETADO | ~~Nombre de clase con typo~~ |
 | `RedisConfig.java` | 🟡 MEDIO | **Parámetro `RestClient.Builder` no usado** |
 | `Dockerfile` | ✅ COMPLETADO | ~~Sólo ejecuta `top -b`, no inicia la aplicación Java~~ |
+| `application.yml` | ✅ COMPLETADO | ~~Renombrado desde `Application.yml` (Linux/Docker)~~ |
+| Motor Sync | ✅ COMPLETADO MVP | `SyncEngineService` + `SyncController` + cliente Supabase |
 
 ---
 
-*Documento generado el 2026-05-26 | Actualizado 2026-09-01 (módulos de dominio completos, Purchases incluido)*
-*Siguiente foco: Sync Engine y tests*
+*Documento generado el 2026-05-26 | Actualizado 2026-09-15 (Sync MVP, YAML lowercase, enums pawn/source)*
+*Siguiente foco: tests de integración y Dashboard*

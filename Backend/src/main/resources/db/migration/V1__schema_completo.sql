@@ -33,7 +33,7 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 DO $$ BEGIN
-    CREATE TYPE pawn_status      AS ENUM ('ACTIVO', 'VENCIDO', 'FINALIZADO', 'RETIRADO', 'PERDIDO', 'Vendido');
+    CREATE TYPE pawn_status      AS ENUM ('ACTIVO', 'VENCIDO', 'FINALIZADO', 'RETIRADO', 'PERDIDO', 'VENDIDO');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS public.pawns (
     installments_missed INT            NOT NULL DEFAULT 0,
     pawn_date           DATE           NOT NULL,
     return_date         DATE           NOT NULL,
-    status              pawn_status    NOT NULL DEFAULT 'Activo',
+    status              pawn_status    NOT NULL DEFAULT 'ACTIVO',
     notes               TEXT,
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
@@ -255,8 +255,8 @@ CREATE INDEX IF NOT EXISTS idx_articles_source_type ON public.articles (source_t
 CREATE INDEX IF NOT EXISTS idx_pawns_global_id      ON public.pawns (global_id);
 CREATE INDEX IF NOT EXISTS idx_pawns_status         ON public.pawns (status);
 CREATE INDEX IF NOT EXISTS idx_pawns_employee       ON public.pawns (employee_id);
-CREATE INDEX IF NOT EXISTS idx_pawns_return_date    ON public.pawns (return_date) WHERE status = 'Activo';
-CREATE INDEX IF NOT EXISTS idx_pawns_active_return  ON public.pawns (return_date) WHERE status = 'Activo';
+CREATE INDEX IF NOT EXISTS idx_pawns_return_date    ON public.pawns (return_date) WHERE status = 'ACTIVO';
+CREATE INDEX IF NOT EXISTS idx_pawns_active_return  ON public.pawns (return_date) WHERE status = 'ACTIVO';
 
 -- pawn_payments
 CREATE INDEX IF NOT EXISTS idx_pawn_payments_pawn_id ON public.pawn_payments (pawn_id);
@@ -363,9 +363,9 @@ DECLARE
     v_count INT;
 BEGIN
     UPDATE public.pawns
-    SET    status     = 'Vencido',
+    SET    status     = 'VENCIDO',
            updated_at = NOW()
-    WHERE  status     = 'Activo'
+    WHERE  status     = 'ACTIVO'
       AND  return_date < CURRENT_DATE;
 
     GET DIAGNOSTICS v_count = ROW_COUNT;

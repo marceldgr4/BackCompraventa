@@ -1,0 +1,11 @@
+jwt:
+  secret: TEST_ONLY_MINIMUM_32_CHARACTER_SECRET_KEY_HMAC
+  expiration-ms: 3600000
+  refresh-expiration-ms: 604800000
+
+sync:
+  enabled: false
+  supabase:
+    url: ""
+    anon-key: ""
+    service-role-key: ""

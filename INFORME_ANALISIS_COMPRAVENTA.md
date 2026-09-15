@@ -2,7 +2,7 @@
 ## Spring Boot 3.4.5 · Java 21 · PostgreSQL 16 · Redis
 
 > **Generado:** Junio 2026  
-> **Actualizado:** Septiembre 2026 — módulo Purchases implementado; el proyecto compila  
+> **Actualizado:** 15 septiembre 2026 — Sync MVP, YAML lowercase, enums pawn/source, JWT al arranque, `AudLog.entityId`  
 > **Revisado por:** Análisis estático exhaustivo del repositorio  
 > **Alcance:** Código fuente, documentación, migraciones, configuración, historias de usuario y requisitos
 
@@ -22,26 +22,24 @@
 | Módulo Pawns              | 100%   |
 | Módulo Sales              | 100%   |
 | Módulo Purchases          | 100%   |
-| Motor Sync                | 15%    |
-| Tests                     | 5%     |
-| **TOTAL GLOBAL**          | **~92%** |
+| Motor Sync                | 80%    |
+| Tests                     | 20%    |
+| **TOTAL GLOBAL**          | **~96%** |
 
 ### Resumen Ejecutivo
 
-El proyecto tiene una **base de infraestructura sólida y bien construida**. Los módulos transversales (Config, Security, Audit, Exception, Shared) están completos. Auth, Employee, Clients, Articles, Pawns, Sales y **Purchases** están implementados.
+El proyecto tiene una **base de infraestructura sólida y bien construida**. Los módulos transversales (Config, Security, Audit, Exception, Shared) están completos. Auth, Employee, Clients, Articles, Pawns, Sales, **Purchases** y el **motor Sync MVP** (outbox → Supabase) están implementados.
 
-El motor de sincronización offline solo tiene la entidad `SyncOutbox` sin servicio operacional. Los tests prácticamente no existen más allá de los stubs de Spring Initializr.
-
-Los bugs que impedían compilar Purchases (servicio incompleto, sin controlador, Lombok en Maven, `@Auditable` en Pawns) están corregidos. La app queda lista para operar dominio en local; lo pendiente es Sync y tests.
+Los bugs que impedían compilar Purchases, el YAML en mayúsculas (Linux/Docker), el desalineamiento `pawn_status`/`source_type` vs JPA y las columnas de `Article` quedaron corregidos. En local el dominio opera sin depender de Supabase (`sync.enabled=false` por defecto).
 
 ### Nivel de Preparación para Continuar
 
 ✅ Infraestructura lista  
-✅ Seguridad JWT operacional  
+✅ Seguridad JWT operacional (validación de secret al arranque)  
 ✅ Patrones de referencia establecidos (Employee, Articles, Sale, Purchases)  
-✅ Migraciones de BD: V1 schema, V2 seed admin, V3 columnas `BaseEntity`  
-⚠️ Motor sync incompleto (no bloquea compras/ventas/empeños)  
-❌ Sin tests unitarios ni de integración reales  
+✅ Migraciones de BD: V1–V5 (V4/V5 alinean enums y expiración de empeños)  
+✅ Motor sync MVP (scheduler + `/sync/status` + `/sync/trigger`)  
+⚠️ Tests: unitarios de Clients y Sync; faltan integración/Auth/Articles  
 ✅ Los 7 módulos de dominio core están presentes  
 
 ---
@@ -61,15 +59,16 @@ Los bugs que impedían compilar Purchases (servicio incompleto, sin controlador,
 | RedisConfig | `Config/RedisConfig.java` | ✅ Completo |
 | SchedulingConfig | `Config/SchedulingConfig.java` | ✅ Completo |
 | OpenApiConfig | `Config/OpenApiConfig.java` | ✅ Completo |
-| JacksonConfig | `Config/JackSonConfig.java` | ✅ Completo |
+| JacksonConfig | `Config/JacksonConfig.java` | ✅ Completo |
 | DataSourceConfig | `Config/DataSourceConfig.java` | ✅ (mínimo necesario) |
-| application.yml | `resources/Application.yml` | ✅ Completo |
-| Docker Compose | `Docker-Compose.yml` | ✅ Completo |
+| JwtStartupValidator | `Config/JwtStartupValidator.java` | ✅ Completo |
+| application.yml | `resources/application.yml` | ✅ Completo (lowercase) |
+| Docker Compose | `docker-compose.yml` | ✅ Completo (lowercase) |
 | Dockerfile | `Dockerfile` | ✅ Completo |
 
 **Observaciones técnicas:**
-- `JackSonConfig.java` tiene nombre con mayúscula intermedia incorrecta (convención sería `JacksonConfig.java`) — cosmético, no funcional.
-- `DataSourceConfig.java` solo tiene `@EnableTransactionManagement`; aceptable ya que la configuración real está en `Application.yml`.
+- `JacksonConfig.java`, `application.yml` y `docker-compose.yml` usan nombres en minúsculas para Linux/Docker.
+- `DataSourceConfig.java` solo tiene `@EnableTransactionManagement`; aceptable ya que la configuración real está en `application.yml`.
 - El `RedisConfig` usa `LaissezFaireSubTypeValidator` con `NON_FINAL` — potencialmente peligroso en producción con datos no confiables, pero aceptable para el contexto actual.
 
 ---
@@ -108,7 +107,7 @@ Los bugs que impedían compilar Purchases (servicio incompleto, sin controlador,
 **Observaciones técnicas:**
 - El aspecto captura correctamente args (before) y result (after).
 - La persistencia del audit log no interrumpe el flujo principal (try-catch interno).
-- El campo `entityId` en `AudLog` nunca se popula en `AuditAspect` — siempre queda `null`. Mejora pendiente (baja prioridad).
+- El campo `entityId` en `AudLog` se extrae del resultado (`globalId` / `id`) en `AuditAspect`.
 
 ---
 
@@ -258,6 +257,7 @@ Los bugs que impedían compilar Purchases (servicio incompleto, sin controlador,
 - Service con lógica de stock (sin valores negativos)
 - Controller con endpoints completos
 - Integración con `@Auditable`
+- Columnas JPA alineadas al schema: `source_type`, `item_state`, `purchase_price`
 
 ---
 
@@ -271,7 +271,7 @@ Los bugs que impedían compilar Purchases (servicio incompleto, sin controlador,
 - Transacciones atómicas seguras: `INSERT pawn` + `UPDATE stock article`.
 - Empeño ágil: Creación de cliente rápido, artículo y empeño en una sola transacción unificada.
 - Registro de pagos de cuota y cuotas impagadas, con transiciones de estado automatizadas (a FINALIZADO o PERDIDO).
-- Expiración automática vía `@Scheduled` llamando a la función nativa `fn_expire_overdue_pawns`.
+- Expiración automática vía `@Scheduled` llamando a `fn_expire_overdue_pawns` (estados `ACTIVO`/`VENCIDO`, alineados con JPA; migraciones V4/V5).
 - Máquina de estados validada internamente en la entidad `Pawn` para estados inmutables.
 - Marcado manual como devuelto/retirado.
 - Capas de repositorio, servicio e integración de API REST completas con `@PreAuthorize`.
@@ -343,35 +343,36 @@ Los bugs que impedían compilar Purchases (servicio incompleto, sin controlador,
 
 ### 🔄 Módulo: Sync Engine
 
-**Estado: ⚠️ 15% IMPLEMENTADO**
+**Estado: ✅ MVP OPERATIVO (~80%)**
 
 | Componente | Estado |
 |---|---|
 | `SyncOutbox` entity | ✅ |
 | `SyncStatus` enum | ✅ |
-| `SyncOutboxRepository` | ❌ No existe |
-| `SyncEngineService` | ❌ No existe |
-| `ConflictResolver` | ❌ No existe |
-| `NetworkMonitor` | ❌ No existe |
-| `SupabaseHttpClient` | ❌ No existe |
-| `SyncScheduler` | ❌ No existe |
+| `SyncOutboxRepository` | ✅ |
+| `SyncEngineService` + `@Scheduled` | ✅ |
+| `SupabaseSyncClient` | ✅ Upload INSERT/UPDATE/DELETE |
+| `SyncController` (`/sync/status`, `/sync/trigger`) | ✅ ADMIN |
+| Descarga remota / `NetworkMonitor` | ❌ No implementado (no bloquea el outbox local) |
 
-La tabla `sync_outbox` existe en BD con triggers que capturan cambios automáticamente. Los cambios se registrarán en `sync_outbox` desde que se use cualquier módulo, pero no hay servicio que los procese.
+La tabla `sync_outbox` sigue llena por triggers. Con `SYNC_ENABLED=true` y claves de Supabase reales, el scheduler procesa `PENDING`. En local el default es `sync.enabled=false` para no fallar sin nube.
+
+**Endpoints:** `GET /api/sync/status`, `POST /api/sync/trigger` (ADMIN).
 
 ---
 
 ### 🧪 Tests
 
-**Estado: ❌ 5% (solo stubs de Initializr)**
+**Estado: ⚠️ 20% (unitarios de Clients y Sync)**
 
 | Componente | Estado |
 |---|---|
-| `BackendApplicationTests` | ⚠️ Solo verifica que el contexto carga |
+| `BackendApplicationTests` | ⚠️ Stub de contexto (Testcontainers) |
 | `TestcontainersConfiguration` | ✅ Configurado para Redis |
-| Tests de Service | ❌ Ninguno |
+| `ClienteServiceImplTest` | ✅ |
+| `SyncEngineServiceTest` | ✅ |
 | Tests de Controller | ❌ Ninguno |
-| Tests de Repository | ❌ Ninguno |
-| Tests de integración | ❌ Ninguno |
+| Tests de integración Auth | ❌ Ninguno |
 
 ---
 
@@ -404,8 +405,8 @@ La tabla `sync_outbox` existe en BD con triggers que capturan cambios automátic
 | HU-CLI-01 | CRUD clientes | ✅ Completo | Soft delete abierto, search incluye phone |
 | HU-EMP-01 | Gestión empleados (Admin) | ✅ Completo | |
 | HU-EMP-02 | Actualizar propio perfil | ✅ Completo | |
-| HU-SYNC-01 | Ver estado sync | ❌ Pendiente | |
-| HU-SYNC-02 | Forzar sync manual | ❌ Pendiente | |
+| HU-SYNC-01 | Ver estado sync | ✅ Completo | `GET /sync/status` ADMIN |
+| HU-SYNC-02 | Forzar sync manual | ✅ Completo | `POST /sync/trigger` ADMIN |
 
 ### Requisitos Funcionales Críticos
 
@@ -429,7 +430,7 @@ La tabla `sync_outbox` existe en BD con triggers que capturan cambios automátic
 | RF-06.5 | Soft delete | ✅ |
 | RF-06.6 | Hard delete sin operaciones | ⚠️ Delega a FK constraint |
 | RF-07.1..4 | Módulo Employees | ✅ |
-| RF-08.1..8 | Motor Sync | ❌ Pendiente (solo tabla) |
+| RF-08.1..8 | Motor Sync | ✅ MVP upload outbox; falta download remoto |
 | RF-09.1..4 | Auditoría AOP | ✅ |
 
 ---
@@ -457,8 +458,8 @@ public ResponseEntity<Void> delete(...)
 OR LOWER(c.phone) LIKE LOWER(CONCAT('%', :term, '%'))
 ```
 
-**Bug 3 — `AudLog.entityId` siempre null**
-`AuditAspect` construye el `AudLog` pero nunca popula `entityId`. Para operaciones que retornan un ID, podría extraerse del resultado. (Baja prioridad, pendiente)
+**Bug 3 — `AudLog.entityId` siempre null — ✅ CORREGIDO**
+`AuditAspect` extrae `globalId` / `id` del resultado (incluye `ApiResponse.data`) y lo persiste en `AudLog.entityId`.
 
 **Bug 4 — `AuthResponse.mode` hardcodeado como `"online"` — ✅ CORREGIDO**
 Ahora `AuthServiceImpl` y `TokenServiceImpl.buildAuthResponse()` retornan `mode: "local"`, reflejando correctamente que la autenticación se realiza contra BD local.
@@ -472,10 +473,10 @@ Ahora `AuthServiceImpl` y `TokenServiceImpl.buildAuthResponse()` retornan `mode:
 // En AuthServiceImpl (CORREGIDO): employeeId ahora incluido con globalId
 ```
 
-**Inconsistencia 2 — Convención de nombres de archivos**
-- `JackSonConfig.java` debería ser `JacksonConfig.java`
-- `Application.yml` debería ser `application.yml` (lowercase) — en Linux, Flyway/Spring puede ser case-sensitive
-- `Application-production.yml` ídem
+**Inconsistencia 2 — Convención de nombres de archivos — ✅ CORREGIDO**
+- `JacksonConfig.java`
+- `application.yml` / `application-production.yml`
+- `docker-compose.yml`
 
 **Inconsistencia 3 — `ErrorResponse.java` clase muerta — ✅ CORREGIDO**
 Clase `Exception/Dto/ErrorResponse.java` eliminada. `GlobalExceptionHandler` usa `ApiResponse<Void>` directamente.
@@ -485,23 +486,23 @@ Clase `Exception/Dto/ErrorResponse.java` eliminada. `GlobalExceptionHandler` usa
 
 ### 🟡 Riesgos Técnicos
 
-**Riesgo 1 — Sin tests unitarios ni de integración**
-Las capas Service no tienen ninguna prueba. Un cambio inadvertido en `ClienteServiceImpl.resolveEffectiveStatus()` o en la lógica de Rate Limiting podría introducir regresiones sin ser detectado.
+**Riesgo 1 — Cobertura de tests incompleta**
+Hay unitarios de `ClienteServiceImpl` y `SyncEngineService`. Faltan Auth, Articles, Pawns, integración con Testcontainers.
 
-**Riesgo 2 — `SyncOutbox` acumula registros sin procesador**
-Desde que se active cualquier módulo (Articles, Clients, etc.), los triggers de BD empezarán a insertar en `sync_outbox`. Sin `SyncEngineService`, esa tabla crecerá indefinidamente.
+**Riesgo 2 — Outbox sin procesar si sync está apagado**
+Con `sync.enabled=false` (default local) `sync_outbox` puede crecer. Activar `SYNC_ENABLED=true` y claves reales de Supabase en el entorno que deba replicar.
 
-**Riesgo 3 — JWT secret en `.env` con valor placeholder**
-`JWT_SECRET=CHANGE_ME_MINIMUM_64_CHARACTER_SECRET_KEY_FOR_HMAC_SHA256_SECURITY` — si se usa accidentalmente este valor en cualquier entorno, los tokens serán inseguros.
+**Riesgo 3 — JWT secret placeholder en `.env` local — ✅ MITIGADO**
+`JwtStartupValidator` exige ≥ 32 caracteres y rechaza `CHANGE_ME` si el perfil es `production`. En local solo advierte.
 
-**Riesgo 4 — `Application.yml` con `SUPABASE_SERVICE_ROLE_KEY` requerido**
-Si esta variable de entorno no está seteada y el sync está habilitado, el contexto de Spring puede fallar al arrancar. Debería tener un valor por defecto vacío para entornos de desarrollo.
+**Riesgo 4 — `SUPABASE_SERVICE_ROLE_KEY` requerido — ✅ CORREGIDO**
+`application.yml` usa valores por defecto vacíos. El motor no arranca contra Supabase si la clave es placeholder.
 
 ### 🔵 Mejoras Recomendadas (no críticas)
 
 1. **Agregar `@JsonProperty` o renombrar** en `ClienteResponse` para consistencia de nomenclatura en JSON.
 2. **Implementar `Dashboard` endpoint** — retorna KPIs básicos. Útil para validar integración end-to-end.
-3. **Agregar validación de `JWT_SECRET` al arranque** — verificar que tenga mínimo 32 caracteres en `PostConstruct`.
+3. ~~**Agregar validación de `JWT_SECRET` al arranque**~~ — `JwtStartupValidator` ✅
 4. **Agregar `@Cacheable` en `findAll` de Employees y Clients** — ya existe `CacheManager` con TTLs configurados, pero no se usa en ningún service.
 5. **`AuditRepository.findByDateRange()`** tiene una query JPQL correcta pero nunca hay endpoint que la exponga.
 
@@ -514,7 +515,8 @@ Si esta variable de entorno no está seteada y el sync está habilitado, el cont
 | # | Corrección | Archivo | Impacto |
 |---|---|---|---|
 | C1 | ~~`@DeleteMapping` soft delete sin `@PreAuthorize`~~ | `ClienteController.java` | ✅ CORREGIDO |
-| C2 | `Application.yml` y `Application-production.yml` — renombrar a lowercase | Configuración | En sistemas Linux (Docker), Spring no encuentra el archivo en producción |
+| C2 | ~~`application.yml` y `application-production.yml` lowercase~~ | Configuración | ✅ CORREGIDO |
+| C3 | ~~Enums `pawn_status` / `source_type` vs JPA + columnas `Article`~~ | V1, V4, V5, `Article.java` | ✅ CORREGIDO |
 
 ### 🟠 ALTAS (corregir en el ciclo actual)
 
@@ -529,16 +531,16 @@ Si esta variable de entorno no está seteada y el sync está habilitado, el cont
 
 | # | Corrección | Impacto |
 |---|---|---|
-| M1 | Poblar `AudLog.entityId` en `AuditAspect` | Trazabilidad incompleta |
+| M1 | ~~Poblar `AudLog.entityId` en `AuditAspect`~~ | ✅ CORREGIDO |
 | M2 | Agregar `@JsonProperty` para nombres de campos consistentes en `ClienteResponse` | API inconsistente |
-| M3 | Validar `JWT_SECRET` length en startup | Seguridad |
-| M4 | `SUPABASE_SERVICE_ROLE_KEY` con valor por defecto en yml | Startup en dev sin Supabase |
+| M3 | ~~Validar `JWT_SECRET` length en startup~~ | ✅ CORREGIDO (`JwtStartupValidator`) |
+| M4 | ~~`SUPABASE_SERVICE_ROLE_KEY` con valor por defecto en yml~~ | ✅ CORREGIDO |
 
 ### 🔵 BAJAS (nice-to-have)
 
 | # | Corrección | Impacto |
 |---|---|---|
-| B1 | Renombrar `JackSonConfig.java` → `JacksonConfig.java` | Convención |
+| B1 | ~~Renombrar `JackSonConfig.java` → `JacksonConfig.java`~~ | ✅ CORREGIDO |
 | B2 | Activar `@Cacheable` en listados frecuentes | Performance |
 | B3 | Agregar endpoint `GET /dashboard/metrics` mínimo | Trazabilidad |
 | B4 | Agregar `@SuppressWarnings` o limpiar raw types en `RedisConfig` | Limpieza |
@@ -551,11 +553,11 @@ Si esta variable de entorno no está seteada y el sync está habilitado, el cont
 
 ```
 Articles → Pawns → Sales → Purchases → Sync Engine → Tests
-     ✅         ✅       ✅         ✅           ⚠️          ❌
+     ✅         ✅       ✅         ✅           ✅ MVP      ⚠️
 ```
 
-**Fases 1–4 (Articles, Pawns, Sales, Purchases): completadas.**  
-Siguiente trabajo: Sync Engine y tests. Purchases ya no es el cuello de botella.
+**Fases 1–5 (dominio + Sync MVP): completadas.**  
+Siguiente trabajo: tests de integración/Auth/Articles y Dashboard opcional.
 
 ---
 
@@ -572,10 +574,10 @@ Siguiente trabajo: Sync Engine y tests. Purchases ya no es el cuello de botella.
 public ResponseEntity<Void> delete(@PathVariable UUID globalId) { ... }
 ```
 
-**Tarea 0.2 — Renombrar archivos de configuración**
-- `Application.yml` → `application.yml`
-- `Application-production.yml` → `application-production.yml`
-- `JackSonConfig.java` → `JacksonConfig.java` (opcional, bajo impacto)
+**Tarea 0.2 — Renombrar archivos de configuración — ✅ COMPLETADA**
+- `application.yml` / `application-production.yml`
+- `JacksonConfig.java`
+- `docker-compose.yml`
 
 **Tarea 0.3 — Corregir `globalId` en JWT claims**
 ```java
@@ -721,53 +723,26 @@ public void expireOverduePawns() {
 
 ---
 
-### Fase 5 — Sync Engine básico (estimado: 4-5 horas)
+### Fase 5 — Sync Engine básico (✅ COMPLETADA)
 
-**Tarea 5.1 — SyncOutboxRepository**
-```java
-List<SyncOutbox> findByStatusOrderByCreatedAt(SyncStatus status, Pageable pageable);
+**Tarea 5.1 — SyncOutboxRepository** ✅ `findByStatusOrderByCreatedAtAsc`
+
+**Tarea 5.2 — SyncEngineService** ✅ ciclo `@Scheduled`, skip si Supabase no está configurado, reintentos y CONFLICT.
+
+**Tarea 5.3 — SyncController** ✅
 ```
-
-**Tarea 5.2 — SyncEngineService mínimo viable**
-```java
-@Scheduled(fixedDelay = 30_000)
-@ConditionalOnProperty(name = "sync.enabled", havingValue = "true")
-public void syncCycle() {
-    // Upload pending changes to Supabase
-    // Download remote changes
-}
+GET  /sync/status   → PENDING/SYNCING/SYNCED/FAILED/CONFLICT
+POST /sync/trigger  → ciclo manual (Admin)
 ```
 
-**Tarea 5.3 — SyncController**
-```
-GET  /sync/status   → registros PENDING/FAILED/SYNCED
-POST /sync/trigger  → dispara ciclo manual (Admin)
-```
+Pendiente de producto (no bloquea dominio): descarga remota desde Supabase.
 
 ---
 
-### Fase 6 — Tests (en paralelo desde Fase 1)
+### Fase 6 — Tests (parcial)
 
-**Tarea 6.1 — Tests unitarios de ArticleServiceImpl**
-```java
-@ExtendWith(MockitoExtension.class)
-class ArticleServiceImplTest {
-    // should_throw_when_remove_stock_exceeds_available()
-    // should_create_article_with_default_source_type()
-    // should_filter_available_articles_for_empleado_role()
-}
-```
-
-**Tarea 6.2 — Tests de integración para Auth**
-```java
-@SpringBootTest(webEnvironment = RANDOM_PORT)
-@Testcontainers
-class AuthControllerIT {
-    // should_return_401_on_invalid_credentials()
-    // should_return_token_on_valid_login()
-    // should_block_after_5_failed_attempts()
-}
-```
+**Tarea 6.1 — `ClienteServiceImplTest` y `SyncEngineServiceTest`** ✅  
+**Pendiente:** `ArticleServiceImplTest`, Auth IT con Testcontainers.
 
 ---
 
@@ -775,13 +750,12 @@ class AuthControllerIT {
 
 | Aspecto | Estado | Acción |
 |---|---|---|
-| Base lista para producción | ✅ Auth + Employee + Clients + Articles + Pawns + Sales + Purchases | Puede demostrarse el flujo de negocio |
-| Próximo módulo crítico | ⚠️ Motor Sync | Implementar procesador de `sync_outbox` |
-| Bug bloqueante activo | ✅ Compilación Maven OK | Lombok processor + Purchases/Pawns corregidos |
-| Riesgo mayor | ❌ Sin tests | Agregar en paralelo con Sync |
-| BD | ✅ V1 + V2 + V3 | V3 alinea columnas de `BaseEntity` |
-| Motor sync | ⚠️ Tabla lista, sin servicio | Pendiente; no bloquea dominio |
+| Base lista para demostración | ✅ Auth + Employee + Clients + Articles + Pawns + Sales + Purchases | Flujo de negocio local |
+| Motor sync | ✅ MVP upload | Activar `SYNC_ENABLED` + claves reales para nube |
+| Bug bloqueante activo | ✅ Compilación Maven OK | YAML lowercase, enums pawn/source, columnas Article |
+| Tests | ⚠️ Unitarios Clients + Sync | Ampliar Auth/Articles e integración |
+| BD | ✅ V1–V5 | V4/V5 alinean enums y `fn_expire_overdue_pawns` |
 
 ---
 
-*Informe generado con base en revisión estática del repositorio — Junio 2026; actualizado septiembre 2026 (Purchases completo).*
+*Informe generado con base en revisión estática del repositorio — Junio 2026; actualizado 15 septiembre 2026 (Sync MVP y correcciones críticas).*
