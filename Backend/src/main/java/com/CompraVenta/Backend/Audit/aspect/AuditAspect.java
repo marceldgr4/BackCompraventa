@@ -16,7 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.lang.reflect.Method;
 import java.time.Instant;
+import java.util.List;
 
 
 @Slf4j
@@ -35,6 +37,7 @@ public class AuditAspect {
         String beforeValue = null;
         String afterValue = null;
         String errorMessage = null;
+        String entityId = null;
         Object result = null;
         try {
            if(joinPoint.getArgs().length > 0 ){
@@ -43,6 +46,7 @@ public class AuditAspect {
            result = joinPoint.proceed();
            if(result!=null){
                afterValue =  serializeSafely(result);
+               entityId = extractEntityId(result);
            }
         }catch (Throwable ex){
             errorMessage = ex.getMessage();
@@ -51,6 +55,7 @@ public class AuditAspect {
             persisAduitLog(
                     auditable.operation(),
                     auditable.entity(),
+                    entityId,
                     employeeId,
                     ipAddress,
                     beforeValue,
@@ -62,13 +67,14 @@ public class AuditAspect {
 
     }
     private void persisAduitLog(
-            String operation, String entityType, String employeeId, String ipAddress,
+            String operation, String entityType, String entityId, String employeeId, String ipAddress,
             String beforeValue, String afterValue, String errorMessage
     ){
         try{
             AudLog log =  AudLog.builder()
                     .operation(operation)
                     .entityType(entityType)
+                    .entityId(entityId)
                     .employeeId(employeeId)
                     .ipAddress(ipAddress)
                     .beforeValue(beforeValue)
@@ -97,6 +103,34 @@ public class AuditAspect {
             return "UNKNOWN";
         }
     }
+    private String extractEntityId(Object result) {
+        if (result == null) {
+            return null;
+        }
+        if (result instanceof com.CompraVenta.Backend.Shared.Dto.ApiResponse<?> apiResponse) {
+            return extractEntityId(apiResponse.getData());
+        }
+        if (result instanceof com.CompraVenta.Backend.Shared.Dto.PageResponse<?>) {
+            return null;
+        }
+        for (String methodName : List.of("globalId", "getGlobalId", "id", "getId")) {
+            Object value = invokeIfPresent(result, methodName);
+            if (value != null) {
+                return String.valueOf(value);
+            }
+        }
+        return null;
+    }
+
+    private Object invokeIfPresent(Object target, String methodName) {
+        try {
+            Method method = target.getClass().getMethod(methodName);
+            return method.invoke(target);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     private String  serializeSafely(Object object){
         try {
             return objectMapper.writeValueAsString(object);

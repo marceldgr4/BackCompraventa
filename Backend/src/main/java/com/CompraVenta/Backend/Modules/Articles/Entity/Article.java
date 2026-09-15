@@ -7,8 +7,6 @@ import com.CompraVenta.Backend.Modules.Articles.Enums.SourceType;
 import com.CompraVenta.Backend.Shared.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
-
 import java.math.BigDecimal;
 
 @Builder
@@ -45,11 +43,11 @@ public class Article extends BaseEntity {
     private ArticleCategory category;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "source_Type",length = 20)
+    @Column(name = "source_type", length = 20)
     private SourceType sourceType;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "item_State",length = 20)
+    @Column(name = "item_state", length = 20)
     private ItemStatus itemState;
 
     @Column(name = "amount",nullable = false)
@@ -59,7 +57,7 @@ public class Article extends BaseEntity {
     @Column(name = "price",nullable = false,precision = 12,scale = 2)
     private BigDecimal price;
 
-    @Column(name = "purchase_Price",precision = 12,scale = 2)
+    @Column(name = "purchase_price", precision = 12, scale = 2)
     private  BigDecimal purchasePrice;
 
     public boolean hasStock() {

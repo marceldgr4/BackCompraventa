@@ -43,7 +43,7 @@ public class SyncOutbox {
     private long localVersion = 1L;
 
     @Column(name = "cloud_version")
-    private long cloudVersion;
+    private Long cloudVersion;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status",nullable = false,length = 20)

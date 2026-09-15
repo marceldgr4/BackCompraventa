@@ -1,7 +1,7 @@
 # Informe de Auditoría Técnica — CompraVenta Backend
-**Fecha original:** Junio 2026 | **Actualizado:** Septiembre 2026 | **Stack:** Java 21 · Spring Boot 3.4.5 · PostgreSQL 16 · Redis · Flyway
+**Fecha original:** Junio 2026 | **Actualizado:** 15 septiembre 2026 | **Stack:** Java 21 · Spring Boot 3.4.5 · PostgreSQL 16 · Redis · Flyway
 
-> **Estado 2026-09:** Los bugs de Clientes listados abajo se aplicaron en el código. Auth, Employee, Clients, Articles, Pawns, Sales y **Purchases** están construidos. Compilación Maven OK. Pendiente: Sync Engine y tests. Ver `INFORME_ANALISIS_COMPRAVENTA.md` y `PROMPT_MODULO_PURCHASES.md`.
+> **Estado 2026-09-15:** BUG-01 a BUG-18 de Clientes siguen aplicados. Además: Sync MVP, YAML/Compose/JacksonConfig en lowercase, enums pawn/source + columnas `Article`, `AudLog.entityId`, validación JWT al arranque. Compilación Maven OK. Ver `INFORME_ANALISIS_COMPRAVENTA.md`.
 
 ---
 
@@ -15,9 +15,9 @@
 | Seguridad | JwtAuthenticationFilter, JwtService, CustomUserDetails, UserDetailsServiceImpl, SecurityContext |
 | Infraestructura | BaseEntity, ApiResponse, PageResponse, ErrorDetail, GlobalExceptionHandler |
 | Configuración | SecurityConfig, RedisConfig, JacksonConfig, CorsConfig, SchedulingConfig, application.yml |
-| Base de datos | `V1__schema_completo.sql`, `V2__seed_admin.sql`, `V3__align_base_entity_columns.sql` |
+| Base de datos | `V1__schema_completo.sql`, `V2__seed_admin.sql`, `V3__align_base_entity_columns.sql`, `V4__align_enum_values.sql`, `V5__align_pawn_status_runtime.sql` |
 | Auditoría | AuditAspect, AuditLog, AuditRepository, @Auditable |
-| Sync | SyncOutbox, SyncStatus |
+| Sync | SyncOutbox, SyncStatus, SyncOutboxRepository, SyncEngineService, SupabaseSyncClient, SyncController |
 
 ---
 
@@ -31,10 +31,11 @@
 - **ApiResponse / PageResponse**: wrappers genéricos bien diseñados, usados consistentemente en Employee y Auth.
 - **SecurityConfig**: JWT stateless, @EnableMethodSecurity, endpoints públicos correctamente declarados.
 - **JwtAuthenticationFilter**: verifica blacklist en Redis antes de autenticar, degradación si Redis no disponible.
-- **Flyway migrations**: V1 schema completo (incluye `purchases`, SP `register_sale`, triggers sync), V2 seed admin, V3 columnas `is_deleted`/`updated_at` para alinear `BaseEntity`.
+- **Flyway migrations**: V1 schema completo, V2 seed admin, V3 columnas `is_deleted`/`updated_at`, V4 valores de enum (`VENDIDO`, `EMPEÑO`, `OTROS`), V5 default/índices/`fn_expire_overdue_pawns` en `ACTIVO`/`VENCIDO`.
 - **SchedulingConfig**: ThreadPoolTaskScheduler separado del thread principal, no bloquea HTTP.
 - **Docker Compose**: stack completo con health checks, PostgreSQL 16, Redis, pgAdmin.
-- **AuditAspect**: captura before/after, IP, employeeId con AOP — no contamina lógica de negocio.
+- **AuditAspect**: captura before/after, IP, employeeId y `entityId` con AOP — no contamina lógica de negocio.
+- **Sync MVP**: procesa `sync_outbox` hacia PostgREST de Supabase; skip seguro si no hay claves.
 
 ---
 
@@ -160,10 +161,11 @@ También corregir `createAt`/`updateAt` → `createdAt`/`updatedAt` para coincid
 
 ---
 
-#### BUG-16: V1 `DEFAULT 'Activo'` inconsistente con enum `('ACTIVO','INACTIVO')`
-**Archivo:** `V1__initial_schema.sql`  
-**Problema:** El tipo enum PostgreSQL define `('ACTIVO','INACTIVO')` pero el `DEFAULT` de la columna usa `'Activo'` (PascalCase). PostgreSQL lanzará error de constraint en cada INSERT sin status explícito.  
-**Corrección:** Migración `V5__fix_cliente_status_default.sql` que cambia el DEFAULT a `'ACTIVO'` y corrige registros existentes.
+#### BUG-16: V1 `DEFAULT 'Activo'` inconsistente con enum
+**Archivo:** `V1__schema_completo.sql`  
+**Problema original (clientes):** el default PascalCase no coincidía con el enum. En el V1 vigente el default de clientes ya es `'ACTIVO'`.  
+**Problema real restante (empeños):** `pawn_status` y `fn_expire_overdue_pawns` usaban `'Activo'`/`'Vencido'` mientras JPA escribe `ACTIVO`/`VENCIDO`; `SourceType.EMPEÑO`/`OTROS` no existían en PG.  
+**Corrección:** V1 alineado para instalaciones nuevas; `V4__align_enum_values.sql` + `V5__align_pawn_status_runtime.sql` para bases existentes.
 
 ---
 
@@ -193,8 +195,8 @@ También corregir `createAt`/`updateAt` → `createdAt`/`updatedAt` para coincid
 ---
 
 #### BUG-20: `SyncOutbox` y `SyncStatus` en paquete raíz `Sync`
-**Problema:** Deberían estar en subpaquetes siguiendo la convención del proyecto (`Sync/Entity`, `Sync/Repository`).  
-**Corrección recomendada:** Mover en la siguiente iteración, no urgente.
+**Problema:** Convención preferida `Sync/Entity`. El resto del motor ya está en `Repository`, `service`, `client`, `Controller`, `Dto`.  
+**Estado:** no urgente; no impide el MVP.
 
 ---
 
@@ -222,25 +224,29 @@ También corregir `createAt`/`updateAt` → `createdAt`/`updatedAt` para coincid
 | `ClienteMapper.java` | BUG-10 | 🟠 Alto |
 | `BaseEntity.java` | BUG-05 | 🔴 Crítico |
 | `LoginRateLimitService.java` | BUG-18 | 🟠 Alto |
-| `V5__fix_cliente_status_default.sql` | BUG-16 | 🟡 Medio |
+| `V4__align_enum_values.sql` / `V5__align_pawn_status_runtime.sql` | BUG-16 (empeños/source_type) | 🔴 Crítico |
 | `GlobalExceptionHandler` duplicado | BUG-08 | 🔴 Crítico |
 
 ---
 
 ## 5. Próximos Pasos Sugeridos
 
-### Hecho (septiembre 2026)
+### Hecho (15 septiembre 2026)
 1. Módulo Clientes y correcciones BUG-01 a BUG-18 aplicadas en código.
 2. `GlobalExceptionHandler` unificado en `Exception/handler/`.
 3. Módulos **Articles**, **Pawns**, **Sales** y **Purchases** implementados.
-4. Compilación Maven con procesador Lombok; Purchases con controller y transacción completa.
+4. Compilación Maven con procesador Lombok.
+5. Motor Sync MVP (`SyncEngineService`, scheduler, `/sync/status`, `/sync/trigger`).
+6. `application.yml` / `docker-compose.yml` / `JacksonConfig.java` en lowercase.
+7. Enums pawn/source + columnas `Article` (`source_type`, `item_state`, `purchase_price`).
+8. `AudLog.entityId` y `JwtStartupValidator`.
+9. Tests unitarios: `ClienteServiceImplTest`, `SyncEngineServiceTest`.
 
 ### Corto plazo
-5. Motor Sync (`SyncEngineService` + scheduler) — la tabla `sync_outbox` ya recibe cambios por trigger.
-6. Tests de `PurchaseServiceImpl`, `ClienteServiceImpl` y `AuthServiceImpl`.
-7. Renombrar `Application.yml` → `application.yml` si se despliega en Linux.
+- Ampliar tests (Auth, Articles, integración Testcontainers).
+- Dashboard KPI (opcional).
+- Download remoto Supabase (el upload del outbox ya está).
 
 ### Mediano plazo
-8. Dashboard KPI.
-9. Mover `SyncOutbox`/`SyncStatus` a subpaquetes.
-10. Valorar `Employee.rol` → `role` en un refactor dedicado.
+- Mover `SyncOutbox`/`SyncStatus` a subpaquete `Entity` (BUG-20).
+- Valorar `Employee.rol` → `role` en un refactor dedicado.

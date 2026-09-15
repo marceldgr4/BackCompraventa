@@ -29,7 +29,7 @@ server:
     accept-count: 100
 
 sync:
-  enabled: true
+  enabled: ${SYNC_ENABLED:true}
   schedule:
     interval-ms: 30000
 

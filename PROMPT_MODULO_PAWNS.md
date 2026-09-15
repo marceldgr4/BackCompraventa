@@ -30,6 +30,10 @@ El texto siguiente es la especificación original. El módulo ya está construid
 - `SourceType.EMPENO` → `SourceType.EMPEÑO` (valor del enum Java).
 - `ApiResponse.success(...)` añadido como alias de `ok(...)`.
 
+**Correcciones de runtime (15 septiembre 2026):**
+- Enum PG `pawn_status` / `source_type` alineados con JPA (`ACTIVO`/`VENCIDO`/`VENDIDO`, `EMPEÑO`, `OTROS`).
+- `fn_expire_overdue_pawns()` usa `ACTIVO` → `VENCIDO` (V1 + V4/V5).
+
 ---
 
 ### Especificación original (referencia)

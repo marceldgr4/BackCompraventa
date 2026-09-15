@@ -96,24 +96,24 @@ management:
 
 # ── JWT ────────────────────────────────────────────────────────────────────
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:}
   expiration-ms: ${JWT_EXPIRATION_MS:3600000}          # 1 hora
   refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 días
 
 # ── Sync Engine ────────────────────────────────────────────────────────────
 sync:
-  enabled: ${SYNC_ENABLED:true}
+  enabled: ${SYNC_ENABLED:false}
   supabase:
-    url: ${SUPABASE_URL}
-    anon-key: ${SUPABASE_ANON_KEY}
-    service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
+    url: ${SUPABASE_URL:}
+    anon-key: ${SUPABASE_ANON_KEY:}
+    service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
     timeout-seconds: 30
   schedule:
     interval-ms: ${SYNC_INTERVAL_MS:30000}     # 30 segundos
     batch-size: ${SYNC_BATCH_SIZE:100}
     max-retries: 5
   conflict-strategy: remote-wins
-  signing-secret: ${SYNC_SIGNING_SECRET}
+  signing-secret: ${SYNC_SIGNING_SECRET:}
 
 # ── CORS ───────────────────────────────────────────────────────────────────
 cors:
