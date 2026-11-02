@@ -29,16 +29,18 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
-    private static final String[] PUBLIC_ENDPOINTS = {
-            "/auth/login",
-            "/auth/refresh",
-            "/actuator/health",
-            "/actuator/info",
-            "/swagger-ui/**",
-            "/api-docs/**",
-            "/swagger-ui.html",
-            "/v3/api-docs/**"
-    };
+	private static final String[] PUBLIC_ENDPOINTS = {
+			"/api/auth/login",
+			"/api/auth/refresh",
+			"/api/actuator/health",
+			"/api/actuator/info",
+			"/api/v3/api-docs/**",
+			"/api/swagger-ui/**",
+			"/api/swagger-ui.html",
+			"/v3/api-docs/**",
+			"/swagger-ui/**",
+			"/swagger-ui.html"
+	};
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

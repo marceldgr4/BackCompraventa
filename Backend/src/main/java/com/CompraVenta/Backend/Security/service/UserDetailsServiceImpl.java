@@ -12,11 +12,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final EmployeeRepository employeeRepository;
+
+    public UserDetailsServiceImpl(@org.springframework.context.annotation.Lazy EmployeeRepository employeeRepository) {
+        this.employeeRepository = employeeRepository;
+    }
 
     @Override
     @Transactional(readOnly = true)

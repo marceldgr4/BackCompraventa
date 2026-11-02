@@ -19,7 +19,7 @@ public interface ArticleService {
     ArticleResponse findByGlobalId(UUID globalId);
     ArticleResponse create(CreateArticleRequest request);
     ArticleResponse update(UUID globalId, UpdateArticleRequest request);
-    ArticleResponse addStock(UUID globalId, StockAdjustRequest resquest);
-    ArticleResponse removeStock(UUID globalId, StockAdjustRequest resquest);
+    ArticleResponse addStock(UUID globalId, StockAdjustRequest request);
+    ArticleResponse removeStock(UUID globalId, StockAdjustRequest request);
     void delete(UUID globalId);
 }

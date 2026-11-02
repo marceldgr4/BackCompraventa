@@ -23,4 +23,18 @@ public class LoginRateLimitService {
     public boolean tryConsume(String email) {
         return buckets.computeIfAbsent(email, k -> createNewBucket()).tryConsume(1);
     }
+
+    public boolean checkLoginAttempts(String email) {
+        return tryConsume(email);
+    }
+
+    public void incrementAttempts(String email) {
+        // In Bucket4j, tryConsume already increments the attempt.
+        // If this is called separately, we just try to consume one token.
+        tryConsume(email);
+    }
+
+    public void resetAttempts(String email) {
+        buckets.remove(email);
+    }
 }

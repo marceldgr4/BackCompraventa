@@ -24,7 +24,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     open-in-view: false
     show-sql: false
     properties:
@@ -96,7 +96,7 @@ management:
 
 # ── JWT ────────────────────────────────────────────────────────────────────
 jwt:
-  secret: ${JWT_SECRET:}
+  secret: ${JWT_SECRET:v9y$B&E)H@sSfdoxS_K9SdfS8SdfS8dfSdfSdfSdfSdfSdf}
   expiration-ms: ${JWT_EXPIRATION_MS:3600000}          # 1 hora
   refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 días
 
@@ -125,11 +125,14 @@ cors:
 # ── OpenAPI / Swagger ──────────────────────────────────────────────────────
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
     operations-sorter: alpha
     tags-sorter: alpha
+  # Estas rutas deben ser relativas al context-path /api
+  swagger-ui.config-url: /api/v3/api-docs/swagger-config
+  swagger-ui.url: /api/v3/api-docs
   info:
     title: CompraVenta API
     description: REST API para el Sistema de CompraVenta / Empeño / Inventario

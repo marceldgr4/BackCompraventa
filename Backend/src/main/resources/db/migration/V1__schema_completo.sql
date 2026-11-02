@@ -2,65 +2,22 @@
 -- V1__schema_completo.sql
 --
 -- Schema completo y definitivo del sistema CompraVenta.
--- Consolida: enums, tablas, índices, triggers, funciones y procedimientos.
---
--- Generado el 2026-06-09 fusionando V1..V7 anteriores.
+-- Consolida: tablas, índices, triggers, funciones y procedimientos.
 -- =============================================================================
 
 
 -- ═══════════════════════════════════════════════════════════════════════════════
--- 1. TIPOS ENUM
--- ═══════════════════════════════════════════════════════════════════════════════
-
-DO $$ BEGIN
-    CREATE TYPE role_user         AS ENUM ('ADMIN', 'EMPLEADO');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$ BEGIN
-    CREATE TYPE article_category AS ENUM ('ELECTRODOMESTICOS', 'TECNOLOGIA', 'OTROS');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$ BEGIN
-    CREATE TYPE source_type      AS ENUM ('EMPENO', 'COMPRA', 'AJUSTE', 'OTRO');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$ BEGIN
-    CREATE TYPE item_state       AS ENUM ('EXCELENTE', 'BUENO', 'REGULAR', 'MALO');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$ BEGIN
-    CREATE TYPE pawn_status      AS ENUM ('ACTIVO', 'VENCIDO', 'FINALIZADO', 'RETIRADO', 'PERDIDO', 'VENDIDO');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$ BEGIN
-    CREATE TYPE cliente_status   AS ENUM ('ACTIVO', 'INACTIVO', 'ELIMINADO');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$ BEGIN
-    CREATE TYPE registration_type AS ENUM ('COMPLETO', 'RAPIDO');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-
--- ═══════════════════════════════════════════════════════════════════════════════
--- 2. TABLAS
+-- 1. TABLAS
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 -- ── employees ────────────────────────────────────────────────────────────────
-
 CREATE TABLE IF NOT EXISTS public.employees (
     id            BIGSERIAL   PRIMARY KEY,
     global_id     UUID        NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     email         TEXT        NOT NULL UNIQUE,
     full_name     TEXT        NOT NULL,
     password_hash TEXT        NOT NULL,
-    rol           role_user   NOT NULL DEFAULT 'EMPLEADO',
+    rol           TEXT        NOT NULL DEFAULT 'EMPLEADO' CHECK (rol IN ('ADMIN', 'EMPLEADO')),
     active        BOOLEAN     NOT NULL DEFAULT TRUE,
     is_deleted    BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -68,7 +25,6 @@ CREATE TABLE IF NOT EXISTS public.employees (
 );
 
 -- ── clientes ─────────────────────────────────────────────────────────────────
-
 CREATE TABLE IF NOT EXISTS public.clientes (
     id                BIGSERIAL         PRIMARY KEY,
     global_id         UUID              NOT NULL UNIQUE DEFAULT gen_random_uuid(),
@@ -79,24 +35,23 @@ CREATE TABLE IF NOT EXISTS public.clientes (
     phone             TEXT,
     address           TEXT,
     city              TEXT,
-    status            cliente_status    NOT NULL DEFAULT 'ACTIVO',
-    registration_type registration_type NOT NULL DEFAULT 'COMPLETO',
+    status            TEXT              NOT NULL DEFAULT 'ACTIVO' CHECK (status IN ('ACTIVO', 'INACTIVO', 'ELIMINADO')),
+    registration_type TEXT              NOT NULL DEFAULT 'COMPLETO' CHECK (registration_type IN ('COMPLETO', 'RAPIDO')),
     is_deleted        BOOLEAN           NOT NULL DEFAULT FALSE,
     created_at        TIMESTAMPTZ       NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ       NOT NULL DEFAULT NOW()
 );
 
 -- ── articles ─────────────────────────────────────────────────────────────────
-
 CREATE TABLE IF NOT EXISTS public.articles (
     id             BIGSERIAL         PRIMARY KEY,
     global_id      UUID              NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     cliente_id     BIGINT            REFERENCES public.clientes(id) ON DELETE SET NULL,
     name_article   TEXT              NOT NULL,
     description    TEXT,
-    category       article_category  NOT NULL,
-    source_type    source_type,
-    item_state     item_state,
+    category       TEXT              NOT NULL CHECK (category IN ('ELECTRODOMESTICOS', 'TECNOLOGIA', 'OTROS')),
+    source_type    TEXT              CHECK (source_type IN ('EMPENO', 'COMPRA', 'AJUSTE', 'OTRO')),
+    item_state     TEXT              CHECK (item_state IN ('EXCELENTE', 'BUENO', 'REGULAR', 'MALO')),
     amount         INT               NOT NULL DEFAULT 0 CHECK (amount >= 0),
     price          NUMERIC(12, 2)    NOT NULL CHECK (price > 0),
     purchase_price NUMERIC(12, 2),
@@ -105,7 +60,6 @@ CREATE TABLE IF NOT EXISTS public.articles (
 );
 
 -- ── pawns ────────────────────────────────────────────────────────────────────
-
 CREATE TABLE IF NOT EXISTS public.pawns (
     id                  BIGSERIAL      PRIMARY KEY,
     global_id           UUID           NOT NULL UNIQUE DEFAULT gen_random_uuid(),
@@ -120,7 +74,7 @@ CREATE TABLE IF NOT EXISTS public.pawns (
     installments_missed INT            NOT NULL DEFAULT 0,
     pawn_date           DATE           NOT NULL,
     return_date         DATE           NOT NULL,
-    status              pawn_status    NOT NULL DEFAULT 'ACTIVO',
+    status              TEXT            NOT NULL DEFAULT 'ACTIVO' CHECK (status IN ('ACTIVO', 'VENCIDO', 'FINALIZADO', 'RETIRADO', 'PERDIDO', 'VENDIDO')),
     notes               TEXT,
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
@@ -128,7 +82,6 @@ CREATE TABLE IF NOT EXISTS public.pawns (
 );
 
 -- ── pawn_payments ────────────────────────────────────────────────────────────
-
 CREATE TABLE IF NOT EXISTS public.pawn_payments (
     id                     BIGSERIAL      PRIMARY KEY,
     pawn_id                BIGINT         NOT NULL REFERENCES public.pawns(id) ON DELETE CASCADE,
@@ -141,7 +94,6 @@ CREATE TABLE IF NOT EXISTS public.pawn_payments (
 );
 
 -- ── sales ────────────────────────────────────────────────────────────────────
-
 CREATE TABLE IF NOT EXISTS public.sales (
     id                  BIGSERIAL   PRIMARY KEY,
     global_id           UUID        NOT NULL UNIQUE DEFAULT gen_random_uuid(),
@@ -154,7 +106,6 @@ CREATE TABLE IF NOT EXISTS public.sales (
 );
 
 -- ── sales_details ────────────────────────────────────────────────────────────
-
 CREATE TABLE IF NOT EXISTS public.sales_details (
     id         BIGSERIAL     PRIMARY KEY,
     sale_id    BIGINT        NOT NULL REFERENCES public.sales(id) ON DELETE CASCADE,
@@ -164,7 +115,6 @@ CREATE TABLE IF NOT EXISTS public.sales_details (
 );
 
 -- ── purchases ────────────────────────────────────────────────────────────────
-
 CREATE TABLE IF NOT EXISTS public.purchases (
     id             BIGSERIAL     PRIMARY KEY,
     global_id      UUID          NOT NULL UNIQUE DEFAULT gen_random_uuid(),
@@ -178,7 +128,6 @@ CREATE TABLE IF NOT EXISTS public.purchases (
 );
 
 -- ── audit_log ────────────────────────────────────────────────────────────────
-
 CREATE TABLE IF NOT EXISTS public.audit_log (
     id            BIGSERIAL    PRIMARY KEY,
     employee_id   TEXT,
@@ -193,9 +142,6 @@ CREATE TABLE IF NOT EXISTS public.audit_log (
 );
 
 -- ── sync_outbox ──────────────────────────────────────────────────────────────
--- status es VARCHAR(20), NO un tipo enum de PostgreSQL.
--- @Enumerated(EnumType.STRING) de JPA escribe strings directamente.
-
 CREATE TABLE IF NOT EXISTS public.sync_outbox (
     id            BIGSERIAL   PRIMARY KEY,
     entity_type   VARCHAR(50) NOT NULL,
@@ -213,7 +159,6 @@ CREATE TABLE IF NOT EXISTS public.sync_outbox (
 );
 
 -- ── sync_log ─────────────────────────────────────────────────────────────────
-
 CREATE TABLE IF NOT EXISTS public.sync_log (
     id          BIGSERIAL   PRIMARY KEY,
     sync_run_id UUID        NOT NULL DEFAULT gen_random_uuid(),
@@ -229,7 +174,7 @@ CREATE TABLE IF NOT EXISTS public.sync_log (
 
 
 -- ═══════════════════════════════════════════════════════════════════════════════
--- 3. ÍNDICES
+-- 2. ÍNDICES
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 -- employees
@@ -286,11 +231,10 @@ CREATE INDEX IF NOT EXISTS idx_sync_outbox_created_at ON public.sync_outbox (cre
 
 
 -- ═══════════════════════════════════════════════════════════════════════════════
--- 4. FUNCIONES Y TRIGGERS
+-- 3. FUNCIONES Y TRIGGERS
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 -- ── Función: actualizar updated_at automáticamente ───────────────────────────
-
 CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 BEGIN
@@ -314,7 +258,6 @@ BEGIN
 END $$;
 
 -- ── Función: captura de cambios para sync_outbox ─────────────────────────────
-
 CREATE OR REPLACE FUNCTION public.fn_capture_sync_outbox()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
 DECLARE
@@ -356,7 +299,6 @@ BEGIN
 END $$;
 
 -- ── Función: expirar empeños vencidos ────────────────────────────────────────
-
 CREATE OR REPLACE FUNCTION public.fn_expire_overdue_pawns()
 RETURNS INT LANGUAGE plpgsql AS $$
 DECLARE
@@ -373,13 +315,11 @@ BEGIN
 END;
 $$;
 
-
 -- ═══════════════════════════════════════════════════════════════════════════════
--- 5. PROCEDIMIENTOS ALMACENADOS
+-- 4. PROCEDIMIENTOS ALMACENADOS
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 -- ── Procedimiento: registrar venta (atómica: cabecera + detalles + stock) ────
-
 CREATE OR REPLACE PROCEDURE public.register_sale(
     p_employee_id          BIGINT,
     p_cliente_id           BIGINT,

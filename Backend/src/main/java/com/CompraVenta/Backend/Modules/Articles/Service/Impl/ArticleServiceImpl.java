@@ -85,15 +85,15 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional
     @Auditable(operation = "ADD_STOCK",entity = "articles")
-    public ArticleResponse addStock(UUID globalId, StockAdjustRequest resquest){
+    public ArticleResponse addStock(UUID globalId, StockAdjustRequest request){
         Article article = findEntityOrThrow(globalId);
-        int updated = articleRepository.adjustStock(article.getId(),resquest.quantity());
+        int updated = articleRepository.adjustStock(article.getId(),request.quantity());
         if (updated == 0){
             throw new BusinessException("No se pudo actualizar el stock"+ globalId);
         }
         Article refreshed = findEntityOrThrow(globalId);
         log.info("Stock agregar: globalId={}, cantidad={}, nuevoStock ={}",
-                globalId, resquest.quantity(), refreshed.getAmount());
+                globalId, request.quantity(), refreshed.getAmount());
         return articleMapper.toResponse(refreshed);
     }
     private Article findEntityOrThrow(UUID globalId){
@@ -103,19 +103,19 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional
     @Auditable(operation = "REMOVE_STOCK",entity = "articles")
-    public ArticleResponse removeStock(UUID globalId, StockAdjustRequest resquest){
+    public ArticleResponse removeStock(UUID globalId, StockAdjustRequest request){
         Article article = findEntityOrThrow(globalId);
-        if (article.getAmount()< resquest.quantity()){
+        if (article.getAmount()< request.quantity()){
             throw new BusinessException(String.format("Stock insuficiente para el artículo '%s'. Disponible: %d, solicitado: %d",
-                    article.getNameArticle(),article.getAmount(),resquest.quantity()));
+                    article.getNameArticle(),article.getAmount(),request.quantity()));
         }
-        int update = articleRepository.adjustStock(article.getId(), -resquest.quantity());
+        int update = articleRepository.adjustStock(article.getId(), -request.quantity());
         if (update == 0){
             throw new BusinessException("No se pudo reducir el stock. Verifique la cantidad disponible."+ globalId);
         }
         Article refreshed = findEntityOrThrow(globalId);
         log.info("Stock retirado: globalId={}, cantidad={}, nuevoStock={}",
-                globalId, resquest.quantity(), refreshed.getAmount());
+                globalId, request.quantity(), refreshed.getAmount());
         return articleMapper.toResponse(refreshed);
     }
     @Override

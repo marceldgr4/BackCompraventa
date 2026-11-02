@@ -24,8 +24,8 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public DashboardSummaryResponse getSummary(Optional<DashboardDateRangeRequest> dateRange) {
-        LocalDate start = dateRange.map(DashboardDateRangeRequest::getStartDate).orElse(LocalDate.now().minusMonths(1));
-        LocalDate end = dateRange.map(DashboardDateRangeRequest::getEndDate).orElse(LocalDate.now());
+        LocalDate start = dateRange.map(DashboardDateRangeRequest::startDate).orElse(LocalDate.now().minusMonths(1));
+        LocalDate end = dateRange.map(DashboardDateRangeRequest::endDate).orElse(LocalDate.now());
 
         BigDecimal revenue = dashboardRepository.getTotalRevenue(start, end);
 
