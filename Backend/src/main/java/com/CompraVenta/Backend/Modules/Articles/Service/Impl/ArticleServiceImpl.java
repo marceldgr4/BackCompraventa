@@ -4,7 +4,7 @@ import com.CompraVenta.Backend.Audit.annotation.Auditable;
 import com.CompraVenta.Backend.Exception.custom.BusinessException;
 import com.CompraVenta.Backend.Exception.custom.ResourceNotFoundException;
 import com.CompraVenta.Backend.Modules.Articles.Dto.Request.CreateArticleRequest;
-import com.CompraVenta.Backend.Modules.Articles.Dto.Request.StockAdjustResquest;
+import com.CompraVenta.Backend.Modules.Articles.Dto.Request.StockAdjustRequest;
 import com.CompraVenta.Backend.Modules.Articles.Dto.Request.UpdateArticleRequest;
 import com.CompraVenta.Backend.Modules.Articles.Dto.Response.ArticleResponse;
 import com.CompraVenta.Backend.Modules.Articles.Entity.Article;
@@ -85,7 +85,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional
     @Auditable(operation = "ADD_STOCK",entity = "articles")
-    public ArticleResponse addStock(UUID globalId, StockAdjustResquest resquest){
+    public ArticleResponse addStock(UUID globalId, StockAdjustRequest resquest){
         Article article = findEntityOrThrow(globalId);
         int updated = articleRepository.adjustStock(article.getId(),resquest.quantity());
         if (updated == 0){
@@ -103,7 +103,7 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     @Transactional
     @Auditable(operation = "REMOVE_STOCK",entity = "articles")
-    public ArticleResponse removeStock(UUID globalId, StockAdjustResquest resquest){
+    public ArticleResponse removeStock(UUID globalId, StockAdjustRequest resquest){
         Article article = findEntityOrThrow(globalId);
         if (article.getAmount()< resquest.quantity()){
             throw new BusinessException(String.format("Stock insuficiente para el artículo '%s'. Disponible: %d, solicitado: %d",

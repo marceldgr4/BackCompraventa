@@ -1,59 +1,26 @@
 package com.CompraVenta.Backend.Modules.auth.Service.Impl;
 
-import com.CompraVenta.Backend.Exception.custom.BusinessException;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Refill;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.concurrent.TimeUnit;
-
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class LoginRateLimitService {
-    private static final String LOGIN_ATTEMPTS_PREFIX = "auth:attempts:";
-    private static final int MAX_LOGIN_ATTEMPTS = 5;
-    private static final long LOCKOUT_MINUTES = 15L;
+    private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
 
-    private final RedisTemplate<String, Object> redisTemplate;
-
-    public void checkLoginAttempts(String email) {
-        try{
-        String key = LOGIN_ATTEMPTS_PREFIX + email;
-        Object attempts = redisTemplate.opsForValue().get(key);
-
-        if (attempts != null && Integer.parseInt(attempts.toString()) >= MAX_LOGIN_ATTEMPTS) {
-            Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
-            throw new BusinessException(String.format(
-                    "Cuenta bloqueada temporalmente por exceso de intentos. Intente en %d segundos.", ttl));
-        }
-    }catch (BusinessException e){
-            throw e;
-        }catch (Exception e){
-        log.warn("Redis no disponible para rate limitado, omitiendi verificacion: {}", e.getMessage());
-        }
+    private Bucket createNewBucket() {
+        return Bucket.builder()
+                .addLimit(Bandwidth.classic(5, Refill.intervally(5, Duration.ofMinutes(15))))
+                .build();
     }
 
-    public void incrementAttempts(String email) {
-        try {
-            String key = LOGIN_ATTEMPTS_PREFIX + email;
-            Long current = redisTemplate.opsForValue().increment(key);
-
-            if (current != null && current == 1L) {
-                redisTemplate.expire(key, LOCKOUT_MINUTES, TimeUnit.MINUTES);
-            }
-        } catch (Exception e) {
-            log.warn("Redis no disponible, omitiendo incremento de intentos: {}", e.getMessage());
-        }
-    }
-
-    public void resetAttempts(String email) {
-        try {
-            redisTemplate.delete(LOGIN_ATTEMPTS_PREFIX + email);
-        } catch (Exception e) {
-            log.warn("Redis no disponible, omitiendo reset de intentos: {}", e.getMessage());
-        }
+    public boolean tryConsume(String email) {
+        return buckets.computeIfAbsent(email, k -> createNewBucket()).tryConsume(1);
     }
 }

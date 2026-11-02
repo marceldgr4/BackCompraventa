@@ -22,7 +22,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SyncEngineService {
+public class SyncEngineService implements ISyncEngineService {
 
     private final SyncOutboxRepository syncOutboxRepository;
     private final SupabaseSyncClient supabaseSyncClient;

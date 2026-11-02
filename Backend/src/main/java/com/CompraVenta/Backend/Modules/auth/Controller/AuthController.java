@@ -7,6 +7,7 @@ import com.CompraVenta.Backend.Modules.auth.Dto.Request.LoginRequest;
 import com.CompraVenta.Backend.Modules.auth.Dto.Request.RefreshRequest;
 import com.CompraVenta.Backend.Modules.auth.Dto.Response.AuthResponse;
 import com.CompraVenta.Backend.Modules.auth.Service.AuthService;
+import com.CompraVenta.Backend.Modules.auth.Service.Impl.LoginRateLimitService;
 import com.CompraVenta.Backend.Shared.Dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,11 +24,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Tag(name ="Auth",description = "Autenticacion y gestion de usuario")
-
 public class AuthController {
     private static final String BEARER_PREFIX = "Bearer ";
     private final AuthService authService;
     private final EmployeeService employeeService;
+    private final LoginRateLimitService rateLimitService;
 
     @PostMapping("/login")
     @Operation(summary = "inicio de sesion")
@@ -36,6 +37,10 @@ public class AuthController {
             @Valid
             LoginRequest request
     ) {
+        if (!rateLimitService.tryConsume(request.email())) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponse.error("Demasiados intentos de inicio de sesión. Intente más tarde."));
+        }
         return ResponseEntity.ok(ApiResponse.ok(
                 authService.login(request),
                 "sesion iniciada correctamente."

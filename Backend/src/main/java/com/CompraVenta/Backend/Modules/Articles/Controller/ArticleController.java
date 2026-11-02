@@ -1,7 +1,7 @@
 package com.CompraVenta.Backend.Modules.Articles.Controller;
 
 import com.CompraVenta.Backend.Modules.Articles.Dto.Request.CreateArticleRequest;
-import com.CompraVenta.Backend.Modules.Articles.Dto.Request.StockAdjustResquest;
+import com.CompraVenta.Backend.Modules.Articles.Dto.Request.StockAdjustRequest;
 import com.CompraVenta.Backend.Modules.Articles.Dto.Request.UpdateArticleRequest;
 import com.CompraVenta.Backend.Modules.Articles.Dto.Response.ArticleResponse;
 import com.CompraVenta.Backend.Modules.Articles.Enums.ArticleCategory;
@@ -113,7 +113,7 @@ public class ArticleController {
     @Operation(summary = "agregar unidades al stock")
     public ResponseEntity<ApiResponse<ArticleResponse>> addStock(
             @PathVariable UUID globalId,
-            @RequestBody  @Valid StockAdjustResquest request
+            @RequestBody  @Valid StockAdjustRequest request
     ){
         return ResponseEntity.ok(ApiResponse.ok(
                 articleService.addStock(globalId, request),
@@ -124,7 +124,7 @@ public class ArticleController {
     @Operation(summary = "retirar unidades del stock")
     public ResponseEntity<ApiResponse<ArticleResponse>> removeStock(
             @PathVariable UUID globalId,
-            @RequestBody @Valid StockAdjustResquest request
+            @RequestBody @Valid StockAdjustRequest request
     ){
         return ResponseEntity.ok(ApiResponse.ok(articleService.removeStock(globalId, request),
                 "Stock retirado correctamente"));

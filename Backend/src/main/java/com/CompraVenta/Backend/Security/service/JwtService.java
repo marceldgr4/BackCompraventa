@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -27,6 +28,13 @@ public class JwtService {
 
     @Value("${jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
+
+    @PostConstruct
+    public void validateSecret() {
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalStateException("JWT secret must be at least 32 characters long for security reasons");
+        }
+    }
 
     public String generateAccessToken(UserDetails userDetails) {
         return buildToken(Map.of(), userDetails, expirationMs);
