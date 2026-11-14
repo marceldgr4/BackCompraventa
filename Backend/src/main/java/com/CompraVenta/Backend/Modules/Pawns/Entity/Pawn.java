@@ -97,7 +97,7 @@ public class Pawn extends BaseEntity {
     public void validateStateTransition(PawnStatus newStatus){
         if(isTerminalState()){
             throw new BusinessException(String.format(
-                    "El empeño '%s' esta en estado terminal '%s' y no puede modificarse.",
+                    "El empeño '%s' está en estado terminal '%s' y no puede modificarse.",
                     getGlobalId(),this.status
             ));
         }

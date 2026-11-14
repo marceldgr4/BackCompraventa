@@ -4,14 +4,13 @@ import com.CompraVenta.Backend.Audit.annotation.Auditable;
 import com.CompraVenta.Backend.Exception.custom.BusinessException;
 import com.CompraVenta.Backend.Exception.custom.ResourceNotFoundException;
 import com.CompraVenta.Backend.Modules.Articles.Dto.Request.CreateArticleRequest;
-import com.CompraVenta.Backend.Modules.Articles.Dto.Request.StockAdjustRequest;
+import com.CompraVenta.Backend.Modules.Articles.Dta.Request.StockAdjustRequest;
 import com.CompraVenta.Backend.Modules.Articles.Dto.Request.UpdateArticleRequest;
 import com.CompraVenta.Backend.Modules.Articles.Dto.Response.ArticleResponse;
 import com.CompraVenta.Backend.Modules.Articles.Entity.Article;
 import com.CompraVenta.Backend.Modules.Articles.Enums.ArticleCategory;
 import com.CompraVenta.Backend.Modules.Articles.Mapper.ArticleMapper;
 import com.CompraVenta.Backend.Modules.Articles.Repository.ArticleRepository;
-import com.CompraVenta.Backend.Modules.Articles.Service.ArticleService;
 import com.CompraVenta.Backend.Security.context.SecurityContext;
 import com.CompraVenta.Backend.Shared.Dto.PageResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import java.util.UUID;
 
@@ -57,12 +55,12 @@ public class ArticleServiceImpl implements ArticleService {
         Article article = articleMapper.toEntity(request);
 
         if(article.hasNegativeMargin()){
-            log.warn("Articulo '{}' creado con marge neagtivo: compra={}, venta{}," +
-                    article.getNameArticle(),article.getPurchasePrice(), article.getPrice());
+            log.warn("Artículo '{}' creado con margen negativo: compra={}, venta={}",
+                    article.getNameArticle(), article.getPurchasePrice(), article.getPrice());
         }
         Article saved = articleRepository.save(article);
-        log.info("Articulo creado: id{}, globalId={},categori={}",
-                saved.getId(),saved.getGlobalId(),saved.getCategory());
+        log.info("Artículo creado: id={}, globalId={}, categoría={}",
+                saved.getId(), saved.getGlobalId(), saved.getCategory());
         return articleMapper.toResponse(saved);
     }
 
@@ -74,11 +72,11 @@ public class ArticleServiceImpl implements ArticleService {
         Article article = findEntityOrThrow(globalId);
         articleMapper.applyUpdate(article,request);
         if ((article.hasNegativeMargin())){
-            log.warn("Articulo '{}' actulzado con margen negativo: compra ={}, ventas={}",
-                    article.getNameArticle(),article.getPurchasePrice(), article.getPrice());
+            log.warn("Artículo '{}' actualizado con margen negativo: compra={}, venta={}",
+                    article.getNameArticle(), article.getPurchasePrice(), article.getPrice());
         }
         Article saved = articleRepository.save(article);
-        log.info("Articulo actulizado (full): gloabalId={}",globalId);
+        log.info("Artículo actualizado (full): globalId={}", globalId);
         return articleMapper.toResponse(saved);
     }
 
@@ -89,10 +87,10 @@ public class ArticleServiceImpl implements ArticleService {
         Article article = findEntityOrThrow(globalId);
         int updated = articleRepository.adjustStock(article.getId(),request.quantity());
         if (updated == 0){
-            throw new BusinessException("No se pudo actualizar el stock"+ globalId);
+            throw new BusinessException("No se pudo actualizar el stock "+ globalId);
         }
         Article refreshed = findEntityOrThrow(globalId);
-        log.info("Stock agregar: globalId={}, cantidad={}, nuevoStock ={}",
+        log.info("Stock agregado: globalId={}, cantidad={}, nuevoStock={}",
                 globalId, request.quantity(), refreshed.getAmount());
         return articleMapper.toResponse(refreshed);
     }
@@ -127,7 +125,6 @@ public class ArticleServiceImpl implements ArticleService {
             throw new BusinessException(
                     "No se puede eliminar el artículo '" + article.getNameArticle() +
                             "': tiene empeños activos o vencidos asociados.");
-
         }
         if (articleRepository.hasActiveSales(article.getId())){
             throw new BusinessException(
@@ -135,6 +132,6 @@ public class ArticleServiceImpl implements ArticleService {
                             "': tiene ventas registradas asociadas.");
         }
         articleRepository.delete(article);
-        log.info("Articulo eliminado: globalId ={}, nombre={}", globalId, article.getNameArticle());
+        log.info("Artículo eliminado: globalId ={}, nombre={}", globalId, article.getNameArticle());
     }
 }

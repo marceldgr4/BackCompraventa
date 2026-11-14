@@ -32,7 +32,7 @@ import java.util.UUID;
 @RequestMapping("/articles")
 @RequiredArgsConstructor
 @Validated
-@Tag(name = "Articles", description = "gestion de invetario de articulos")
+@Tag(name = "Articles", description = "Gestión de inventario de artículos")
 public class ArticleController {
     private final ArticleService articleService;
 
