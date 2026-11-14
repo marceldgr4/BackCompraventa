@@ -132,9 +132,26 @@ public class AuditAspect {
     }
 
     private String  serializeSafely(Object object){
+        if(object == null) return null;
         try {
+            if(object instanceof  com.CompraVenta.Backend.Modules.Employee.Dto.Request.CreateEmployeeRequest req){
+                var sanitized = new com.CompraVenta.Backend.Modules.Employee.Dto.Request.CreateEmployeeRequest(
+                        req.email(),
+                        req.fullName(),
+                        " ",
+                        req.rol()
+                );
+                return objectMapper.writeValueAsString(sanitized);
+            }
+            if (object instanceof com.CompraVenta.Backend.Modules.Employee.Dto.Request.UpdateProfile req){
+                var sanitized = new com.CompraVenta.Backend.Modules.Employee.Dto.Request.UpdateProfile(
+                        req.fullName(),
+                        req.newPassword() !=null ? " ": null,
+                        req.confirmPassword() != null ? " ":null
+                );
+                return objectMapper.writeValueAsString(sanitized);
+            }
             return objectMapper.writeValueAsString(object);
-
         }catch (Exception ex){
             return object.toString();
         }

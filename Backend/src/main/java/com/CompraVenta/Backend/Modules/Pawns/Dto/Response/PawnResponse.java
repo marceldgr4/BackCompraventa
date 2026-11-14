@@ -13,16 +13,16 @@ public record PawnResponse(
         Long id,
         UUID globalId,
 
-        UUID artcileGlobalId,
+        UUID articleGlobalId,
         String articleName,
 
         UUID clienteGlobalId,
         String clienteFullName,
 
-        UUID employeeGloabalId,
+        UUID employeeGlobalId,
         Integer amount,
         BigDecimal price,
-        BigDecimal wightGrame,
+        BigDecimal wightGrams,
 
         Integer installmentCount,
         Integer installmentsPaid,
