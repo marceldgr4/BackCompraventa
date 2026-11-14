@@ -3,6 +3,7 @@ package com.CompraVenta.Backend.Modules.Pawns.Entity;
 import com.CompraVenta.Backend.Exception.custom.BusinessException;
 import com.CompraVenta.Backend.Modules.Articles.Entity.Article;
 import com.CompraVenta.Backend.Modules.Clients.Entity.Cliente;
+import com.CompraVenta.Backend.Modules.Employee.Entity.Employee;
 import com.CompraVenta.Backend.Modules.Pawns.Enums.PawnStatus;
 import com.CompraVenta.Backend.Shared.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -13,9 +14,10 @@ import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.Set;
 
+
 @Builder
 @Entity
-@Table(name = "pawns", schema = "public", indexes = {@Index(
+@Table(name = "pawns", indexes = {@Index(
         name = "idx_pawn_global_id_lookup",columnList = "global_id",unique = true
 )})
 @Getter
@@ -31,18 +33,24 @@ public class Pawn extends BaseEntity {
     );
     private static final int MAX_INSTALLMENTS_MISSED = 4;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false, updatable = false, insertable = false)
+    private Employee employee;
+
     @Column(name = "employee_id", nullable = false)
     private Long employeeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "article_id",nullable = false, updatable = false,insertable = false)
     private Article article;
+
     @Column(name = "article_id",nullable = false)
     private Long articleId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id",nullable = false,updatable = false,insertable = false)
     private Cliente cliente;
+
     @Column(name = "cliente_id",nullable = false)
     private Long clienteId;
 
@@ -162,3 +170,5 @@ public class Pawn extends BaseEntity {
         return getClass().hashCode();
     }
 }
+
+

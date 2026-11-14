@@ -36,7 +36,7 @@ public class PawnMapper {
                 pawn.getArticle() != null ? pawn.getArticle().getNameArticle() : null,
                 pawn.getCliente() != null ? pawn.getCliente().getGlobalId() : null,
                 pawn.getCliente() != null ? buildFullName(pawn.getCliente()) : null,
-                null,
+                pawn.getEmployee() != null ? pawn.getEmployee().getGlobalId() : null,
                 pawn.getAmount(),
                 pawn.getPrice(),
                 pawn.getWeightGrams(),

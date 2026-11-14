@@ -39,9 +39,9 @@ public class GlobalExceptionHandler {
 
         @ExceptionHandler(UnauthorizedException.class)
         public ResponseEntity<ApiResponse<Void>> handleUnauthorized(UnauthorizedException ex) {
-            log.warn("Acceso no autorizado: {}", ex.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ApiResponse.error(ex.getMessage(), "FORBIDDEN"));
+            log.warn("Credenciales no autorizadas: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)//401
+                    .body(ApiResponse.error(ex.getMessage(), "UNAUTHORIZED"));
         }
 
         @ExceptionHandler(com.CompraVenta.Backend.Exception.custom.DuplicateResourceException.class)

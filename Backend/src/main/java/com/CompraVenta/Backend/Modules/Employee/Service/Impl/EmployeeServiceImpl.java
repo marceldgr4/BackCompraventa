@@ -100,11 +100,15 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional
     @Auditable(operation = "DELETE_EMPLOYEE", entity = "employees")
     public void delete(UUID id) {
-        if(!employeeRepository.existsByGlobalId(id)){
-            throw new ResourceNotFoundException("Employee not found",id);
+        Employee employee = getEmployeeOrThrow(id);
+        String currentEmail = SecurityContext.getCurrentUsername();
+        if(employee.getEmail().equalsIgnoreCase(currentEmail)) {
+            throw new BusinessException("El administrador no puede desactivar su propia cuenta.");
         }
-        employeeRepository.deleteByGlobalId(id);
-        log.info("Employee deleted: id = {}",id);
+        employee.setActive(false);
+        employee.setDeleted(true);
+        employeeRepository.save(employee);
+        log.info("Empleado marcado como eliminado lógicamente: globalId={}", id);
     }
 
     @Override

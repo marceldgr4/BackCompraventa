@@ -27,7 +27,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     @Query("""
             SELECT e FROM Employee e
-            WHERE (:search IS NUll OR 
+            WHERE e.isDeleted = false
+            AND (:search IS NUll OR 
             LOWER(e.fullName) LIKE LOWER(CONCAT('%',:search, '%')) OR 
             LOWER(e.email) LIKE LOWER(CONCAT('%', :search,'%')))
             AND (:active IS NULL OR e.active = :active)
