@@ -20,6 +20,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -30,22 +32,36 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
 
 	private static final String[] PUBLIC_ENDPOINTS = {
-			"/api/auth/login",
-			"/api/auth/refresh",
-			"/api/actuator/health",
-			"/api/actuator/info",
-			"/api/v3/api-docs/**",
-			"/api/swagger-ui/**",
-			"/api/swagger-ui.html",
-			"/v3/api-docs/**",
-			"/swagger-ui/**",
-			"/swagger-ui.html"
+            "/auth/login",
+            "/auth/refresh",
+            "/actuator/health",
+            "/actuator/info",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+
+            "/api/auth/login",
+            "/api/auth/refresh",
+            "/api/actuator/health",
+            "/api/actuator/info",
+            "/api/v3/api-docs/**",
+            "/api/swagger-ui/**",
+            "/api/swagger-ui.html"
 	};
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .cors(org.springframework.security.config.Customizer.withDefaults())
+                .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) -> {
+                    //  Retornar 401 JSON estándar para que Axios active el interceptor de refresh
+                    response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType(org.springframework.http.MediaType.APPLICATION_JSON_VALUE);
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write("""
+                    {"success":false,"data":null,"message":"No autenticado o token vencido","error":{"message":"%s","code":"UNAUTHORIZED"},"timestamp":"%s"}
+                    """.formatted(authException.getMessage(), java.time.LocalDateTime.now()));
+                }))
                 .headers(headers -> headers
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:;"))
                         .frameOptions(frame -> frame.deny())
@@ -59,7 +75,7 @@ public class SecurityConfig {
                         auth.requestMatchers(new org.springframework.security.web.util.matcher.AntPathRequestMatcher(endpoint)).permitAll();
                     }
                     auth.requestMatchers(new org.springframework.security.web.util.matcher.AntPathRequestMatcher("/**", HttpMethod.OPTIONS.name())).permitAll()
-                        .anyRequest().authenticated();
+                            .anyRequest().authenticated();
                 })
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

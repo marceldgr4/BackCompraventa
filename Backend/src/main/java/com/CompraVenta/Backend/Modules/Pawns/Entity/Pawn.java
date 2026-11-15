@@ -60,7 +60,7 @@ public class Pawn extends BaseEntity {
     @Column(name = "price",nullable = false,precision = 12,scale = 2)
     private BigDecimal price;
 
-    @Column(name = "weight_grams", precision = 10, scale = 2)
+    @Column(name = "wight_grame", precision = 10, scale = 2)
     private BigDecimal weightGrams;
 
     @Column(name = "installment_count", nullable = false)

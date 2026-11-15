@@ -18,6 +18,10 @@ public class PawnMapper {
                 .articleId(article.getId())
                 .clienteId(cliente.getId())
                 .employeeId(employee.getId())
+                .article(article)
+                .cliente(cliente)
+                .employee(employee)
+
                 .amount(request.amount())
                 .price(request.price())
                 .weightGrams(request.weightGrame())

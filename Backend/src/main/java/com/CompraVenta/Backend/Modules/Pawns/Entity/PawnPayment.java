@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @Builder
 @Entity
 @Table(
-        name = "pawn_paymnts", schema = "public",
+        name = "pawn_payments", schema = "public",
         indexes = {
                 @Index(name = "idx_pawn_payments_pawn_id_lookup",
                 columnList = "pawn_id")
@@ -35,7 +35,7 @@ public class PawnPayment {
     @Builder.Default
     private BigDecimal amount = BigDecimal.ZERO;
 
-    @Column(name = "payment-date",nullable = false)
+    @Column(name = "payment_date",nullable = false)
     private LocalDate paymentDate;
 
     @Column(name = "notes",columnDefinition = "TEXT")

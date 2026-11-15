@@ -11,6 +11,7 @@ import com.CompraVenta.Backend.Modules.Employee.Entity.Employee;
 import com.CompraVenta.Backend.Modules.Employee.Mapper.EmployeeMapper;
 import com.CompraVenta.Backend.Modules.Employee.Repository.EmployeeRepository;
 import com.CompraVenta.Backend.Modules.Employee.Service.EmployeeService;
+import com.CompraVenta.Backend.Modules.auth.Service.TokenService;
 import com.CompraVenta.Backend.Security.context.SecurityContext;
 import com.CompraVenta.Backend.Shared.Dto.PageResponse;
 import com.CompraVenta.Backend.Shared.enums.Role;
@@ -33,6 +34,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private  final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
     private final PasswordEncoder passwordEncoder;
+    private final TokenService tokenService;
 
     @Override
     @Transactional(readOnly = true)
@@ -85,6 +87,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = getEmployeeOrThrow(id);
 
         if(!active) {
+            tokenService.revokeAlltokensForUser(employee.getEmail());
             String currentEmail = SecurityContext.getCurrentUsername();
             if (employee.getEmail().equalsIgnoreCase(currentEmail)) {
                 throw new BusinessException("El administrador no puede desactivar su propia cuenta.");

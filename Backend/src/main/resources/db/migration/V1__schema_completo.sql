@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS public.articles (
     cliente_id     BIGINT            REFERENCES public.clientes(id) ON DELETE SET NULL,
     name_article   TEXT              NOT NULL,
     description    TEXT,
-    category       TEXT              NOT NULL CHECK (category IN ('ELECTRODOMESTICOS', 'TECNOLOGIA', 'OTROS')),
+    category       TEXT              NOT NULL CHECK (category IN ('ELECTRODOMESTICOS', 'TECNOLOGIA', 'OTRO')),
     source_type    TEXT              CHECK (source_type IN ('EMPENO', 'COMPRA', 'AJUSTE', 'OTRO')),
     item_state     TEXT              CHECK (item_state IN ('EXCELENTE', 'BUENO', 'REGULAR', 'MALO')),
     amount         INT               NOT NULL DEFAULT 0 CHECK (amount >= 0),

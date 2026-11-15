@@ -14,7 +14,7 @@ public class ArticleMapper {
                 .nameArticle(request.getNameArticle() != null ? request.getNameArticle().trim() : null)
                 .description(request.getDescription())
                 .category(request.getCategory())
-                .sourceType(request.getSourceType() !=null ? request.getSourceType(): SourceType.OTROS)
+                .sourceType(request.getSourceType() !=null ? request.getSourceType(): SourceType.OTRO)
                 .itemState(request.getItemStatus())
                 .amount(request.getAmount()!=null ? request.getAmount():0)
                 .price(request.getPrice())

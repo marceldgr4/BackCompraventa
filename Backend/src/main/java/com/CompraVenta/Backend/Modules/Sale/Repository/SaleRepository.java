@@ -28,7 +28,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
             @Param("employeeId") Long employeeId,
             @Param("clienteId") Long clienteId,
             @Param("dateFrom")LocalDateTime dateFrom,
-            @Param("dataTo")LocalDateTime dateTo,
+            @Param("dateTo")LocalDateTime dateTo,
             Pageable pageable
             );
 

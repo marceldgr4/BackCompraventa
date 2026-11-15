@@ -22,7 +22,7 @@ public record PawnResponse(
         UUID employeeGlobalId,
         Integer amount,
         BigDecimal price,
-        BigDecimal wightGrams,
+        BigDecimal weightGrams,
 
         Integer installmentCount,
         Integer installmentsPaid,

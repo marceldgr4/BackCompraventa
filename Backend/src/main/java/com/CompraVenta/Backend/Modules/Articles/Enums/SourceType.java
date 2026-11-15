@@ -1,8 +1,8 @@
 package com.CompraVenta.Backend.Modules.Articles.Enums;
 
 public enum SourceType {
-    EMPEÑO,
+    EMPENO,
     COMPRA,
     AJUSTE,
-    OTROS
+    OTRO
 }

@@ -111,6 +111,10 @@ public class PawnServiceImpl implements PawnService {
 
         Pawn pawn = pawnMapper.toEntity(request, article, cliente, employee);
         pawn = pawnRepository.save(pawn);
+        pawn.setArticle(article);
+        pawn.setCliente(cliente);
+        pawn.setEmployee(employee);
+
         return pawnMapper.toResponse(pawn);
     }
 
@@ -134,7 +138,7 @@ public class PawnServiceImpl implements PawnService {
                 .nameArticle(request.articleName())
                 .description(request.articleDescription())
                 .category(request.articleCategory())
-                .sourceType(SourceType.EMPEÑO)
+                .sourceType(SourceType.EMPENO)
                 .itemState(request.articleItemStatus())
                 .amount(0) // Stock in sales inventory is 0 since it is pawned
                 .price(request.articlePrice())
@@ -155,6 +159,9 @@ public class PawnServiceImpl implements PawnService {
 
         Pawn pawn = pawnMapper.toEntity(pawnRequest, article, cliente, employee);
         pawn = pawnRepository.save(pawn);
+        pawn.setArticle(article);
+        pawn.setCliente(cliente);
+        pawn.setEmployee(employee);
         return pawnMapper.toResponse(pawn);
     }
 

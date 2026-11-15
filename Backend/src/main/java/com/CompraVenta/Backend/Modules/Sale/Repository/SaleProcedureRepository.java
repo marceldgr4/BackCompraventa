@@ -43,7 +43,7 @@ public class SaleProcedureRepository {
                 cs.setString(4, notes);
 
                 PGobject itemsPayload = new PGobject();
-                itemsPayload.setType("json");
+                itemsPayload.setType("jsonb");
                 itemsPayload.setValue(itemsJson);
                 cs.setObject(5, itemsPayload);
 
